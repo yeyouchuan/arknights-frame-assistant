@@ -93,6 +93,11 @@ class HotkeyController {
         switchKey := Config.GetCustom("SwitchHotkey")
         if (switchKey != "")
             Hotkey(switchKey, this.SwitchHotkey, "On")
+        if (switchKey == "") {
+            A_TrayMenu.Rename("2&", "启用/禁用热键")
+            return
+        }
+        A_TrayMenu.Rename("2&", "启用/禁用热键(" KeyBinder.VirtualNewkeyFormat(switchKey) ")")
         HotIf
     }
     ; 解除设置热键启用/禁用快捷键
@@ -100,6 +105,7 @@ class HotkeyController {
         switchKey := Config.GetCustom("SwitchHotkey")
         if (switchKey != "")
             Hotkey(switchKey, this.SwitchHotkey, "Off")
+        A_TrayMenu.Rename("2&", "启用/禁用热键")
     }
 }
 ; 初始化热键控制器
