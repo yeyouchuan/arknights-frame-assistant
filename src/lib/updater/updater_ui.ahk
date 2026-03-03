@@ -7,6 +7,7 @@ class UpdateUI {
     
     ; 下载对话框实例
     static DownloadingDialog := ""
+    static DownloadingCancelBtn := ""
     
     ; 显示更新提示对话框（支持忽略此版本）
     ; params: 包含以下字段的对象
@@ -118,7 +119,7 @@ class UpdateUI {
         }
     }
     
-    ; 显示正在下载的提示
+    ; 显示正在下载的提示（带取消按钮）
     ; retryCount: 重试次数（0表示首次下载，1+表示重试）
     static ShowDownloadingDialog(retryCount := 0) {
         ; 关闭已存在的下载对话框
@@ -141,17 +142,45 @@ class UpdateUI {
         }
         
         ; 添加文本
-        this.DownloadingDialog.Add("Text", "x20 y20 w300 Center", message)
+        this.DownloadingDialog.Add("Text", "x20 y20 w300 Center vDownloadText", message)
+        
+        ; 添加取消按钮
+        btnW := 80
+        btnH := 26
+        btnX := (340 - btnW) / 2  ; 窗口宽度340，按钮居中
+        btnY := 60
+        this.DownloadingCancelBtn := this.DownloadingDialog.Add("Button", "x" btnX " y" btnY " w" btnW " h" btnH, "取消下载(&C)")
+        this.DownloadingCancelBtn.OnEvent("Click", (*) => this.OnDownloadCancel())
         
         ; 显示对话框（非模态，不阻塞）
-        this.DownloadingDialog.Show("w340 h80 Center")
+        this.DownloadingDialog.Show("w340 h110 Center")
+    }
+    
+    ; 下载取消按钮点击事件
+    static OnDownloadCancel() {
+        ; 调用下载器的取消方法
+        UpdateDownloader.Cancel()
+        
+        ; 更新UI显示取消状态
+        if (this.DownloadingDialog != "") {
+            try {
+                ; 禁用取消按钮，防止重复点击
+                this.DownloadingCancelBtn.Opt("+Disabled")
+                ; 更新文本为取消中
+                this.DownloadingDialog["DownloadText"].Value := "正在取消下载..."
+            }
+        }
+        
+        ; 发布取消事件
+        EventBus.Publish("UpdateDownloadCancelled")
     }
     
     ; 关闭下载对话框
     static CloseDownloadingDialog() {
         if (this.DownloadingDialog != "") {
-            this.DownloadingDialog.Destroy()
+            try this.DownloadingDialog.Destroy()
             this.DownloadingDialog := ""
+            this.DownloadingCancelBtn := ""
         }
     }
     
@@ -166,6 +195,11 @@ class UpdateUI {
             message := "下载更新失败，请检查网络连接后重试。"
         }
         MessageBox.Error(message, "下载失败")
+    }
+    
+    ; 显示下载取消的提示
+    static ShowDownloadCancelledDialog() {
+        MessageBox.Info("下载已取消。", "下载取消")
     }
     
     ; 显示自动更新已禁用的提示
