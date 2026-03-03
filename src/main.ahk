@@ -29,6 +29,9 @@ if not A_IsAdmin
 ; 包含版本号
 #Include ./lib/version.ahk
 
+; 包含统一消息框
+#Include ./lib/message_box.ahk
+
 ; 包含配置管理
 #Include ./lib/config.ahk
 

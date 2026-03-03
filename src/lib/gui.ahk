@@ -211,7 +211,7 @@ class GuiManager {
         txtSkillAndRetreatDelay := this.MainGui.Add("Text", "x" this.GuiXMargin " y+10 Section", "技能和撤退点击延迟")
         this.SkillAndRetreatDelay := this.MainGui.Add("Edit", "x+15 y+-18 w120 h21 vSkillAndRetreatDelay Number", Config.GetCustom("SkillAndRetreatDelay"))
         updownSkillAndRetreatDelay := this.MainGui.Add("UpDown", ,Config.GetCustom("SkillAndRetreatDelay"))
-        hint5 := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中干员到按下【技能】和【撤退】的时长")
+        hint5 := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中干员到按下【技能】和【撤退】的时长，单位为毫秒")
         this.OtherSettingsControls.Push(txtSkillAndRetreatDelay)
         this.OtherSettingsControls.Push(this.SkillAndRetreatDelay)
         this.OtherSettingsControls.Push(updownSkillAndRetreatDelay)
