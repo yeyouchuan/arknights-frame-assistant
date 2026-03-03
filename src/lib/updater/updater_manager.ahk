@@ -9,6 +9,10 @@ class Updater {
     ; 启动延迟检查时间（毫秒）
     static StartupDelay := 100
     
+    ; 下载参数存储（用于重试）
+    static CurrentDownloadParams := ""
+    static CurrentRetryCount := 0
+    
     ; 初始化：订阅事件
     static Init() {
         ; 订阅应用启动事件（自动检查）
@@ -25,6 +29,8 @@ class Updater {
         EventBus.Subscribe("UpdateDownloadComplete", (data) => this.HandleDownloadComplete(data))
         ; 订阅下载错误事件
         EventBus.Subscribe("UpdateDownloadError", (data) => this.HandleDownloadError(data))
+        ; 订阅下载取消事件
+        EventBus.Subscribe("UpdateDownloadCancelled", (*) => this.HandleDownloadCancelled())
     }
     
     ; 启动时检查（异步）
@@ -86,7 +92,7 @@ class Updater {
             case "token_invalid":
                 if (isManual) {
                     ; Token无效，引导用户重新配置
-                    result := MsgBox(checkResult.message "`n`n是否现在修改Token设置？", "Token无效", "YesNo Icon!")
+                    result := MessageBox.Confirm(checkResult.message "`n`n是否现在修改Token设置？", "Token无效")
                     if (result = "Yes") {
                         ; 重置Token验证状态
                         VersionChecker.TokenValidated := false
@@ -103,6 +109,10 @@ class Updater {
     
     ; 带重试的下载
     static DownloadWithRetry(params, retryCount := 0) {
+        ; 保存当前参数（用于重试和取消）
+        this.CurrentDownloadParams := params
+        this.CurrentRetryCount := retryCount
+        
         ; 显示下载中提示（传递重试次数）
         UpdateUI.ShowDownloadingDialog(retryCount)
         
@@ -112,9 +122,16 @@ class Updater {
             localVersion: params.localVersion,
             remoteVersion: params.remoteVersion,
             onComplete: (result) => this.HandleDownloadSuccess(result),
-            onError: (error) => this.HandleDownloadFailure(error, params, retryCount)
+            onError: (error) => this.HandleDownloadFailure(error, params, retryCount),
+            onCancel: (info) => this.HandleDownloadCancelComplete()
         }
         
+        ; 在新线程中执行下载，避免阻塞UI
+        SetTimer(() => this._ExecuteDownload(downloadParams), -10)
+    }
+    
+    ; 执行下载（在新线程中）
+    static _ExecuteDownload(downloadParams) {
         UpdateDownloader.Download(downloadParams)
     }
     
@@ -129,6 +146,12 @@ class Updater {
     
     ; 下载失败处理（带重试）
     static HandleDownloadFailure(error, originalParams, retryCount) {
+        ; 检查是否是取消导致的失败
+        if (error.HasProp("cancelled") && error.cancelled) {
+            ; 取消导致的失败，不显示错误，也不重试
+            return
+        }
+        
         if (retryCount < this.MaxRetries) {
             ; 延迟后重试
             Sleep(this.RetryDelay)
@@ -139,6 +162,23 @@ class Updater {
             ; 重试次数用尽，显示失败
             UpdateUI.ShowDownloadFailedDialog("重试" this.MaxRetries "次后仍失败：`n" error.message)
         }
+    }
+    
+    ; 处理下载取消
+    static HandleDownloadCancelled() {
+        ; 取消下载器
+        UpdateDownloader.Cancel()
+    }
+    
+    ; 处理下载取消完成
+    static HandleDownloadCancelComplete() {
+        ; 关闭下载对话框
+        UpdateUI.CloseDownloadingDialog()
+        ; 显示取消提示
+        UpdateUI.ShowDownloadCancelledDialog()
+        ; 清理参数
+        this.CurrentDownloadParams := ""
+        this.CurrentRetryCount := 0
     }
     
     ; 处理下载完成事件
@@ -159,7 +199,7 @@ class Updater {
         })
         
         if (!replaceResult.success) {
-            MsgBox("启动更新失败：`n" replaceResult.error, "更新失败", "Icon!")
+            MessageBox.Error("启动更新失败：`n" replaceResult.error, "更新失败")
         }
         ; 成功时会自动退出程序
     }
@@ -171,7 +211,7 @@ class Updater {
         Config.SaveAllToIni()
         
         ; 显示提示
-        MsgBox("已忽略版本 " data.remoteVersion " 的更新提示。`n`n下次检查更新时将不再提示此版本。", "已忽略", "Iconi")
+        MessageBox.Info("已忽略版本 " data.remoteVersion " 的更新提示。`n`n下次检查更新时将不再提示此版本。", "已忽略")
     }
     
     ; 显示更新对话框

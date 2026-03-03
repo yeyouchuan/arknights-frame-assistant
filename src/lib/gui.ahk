@@ -76,7 +76,7 @@ class GuiManager {
         AddBindRow(LabelText, KeyVar) {
             controls := []
             txt := this.MainGui.Add("Text", "xs+45 y+16 w90 Right +0x200", LabelText) 
-            edit := this.MainGui.Add("Edit", "x+20 yp-4 w120 Center -TabStop Uppercase v" KeyVar, Config.GetHotkey(KeyVar))
+            edit := this.MainGui.Add("Edit", "x+20 yp-4 w140 Center -TabStop Uppercase v" KeyVar, Config.GetHotkey(KeyVar))
             controls.Push(txt)
             controls.Push(edit)
             return controls
@@ -211,14 +211,14 @@ class GuiManager {
         txtSkillAndRetreatDelay := this.MainGui.Add("Text", "x" this.GuiXMargin " y+10 Section", "技能和撤退点击延迟")
         this.SkillAndRetreatDelay := this.MainGui.Add("Edit", "x+15 y+-18 w120 h21 vSkillAndRetreatDelay Number", Config.GetCustom("SkillAndRetreatDelay"))
         updownSkillAndRetreatDelay := this.MainGui.Add("UpDown", ,Config.GetCustom("SkillAndRetreatDelay"))
-        hint5 := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中干员到按下【技能】和【撤退】的时长")
+        hint5 := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中干员到按下【技能】和【撤退】的时长，单位为毫秒")
         this.OtherSettingsControls.Push(txtSkillAndRetreatDelay)
         this.OtherSettingsControls.Push(this.SkillAndRetreatDelay)
         this.OtherSettingsControls.Push(updownSkillAndRetreatDelay)
         this.OtherSettingsControls.Push(hint5)
         ; 启用/禁用热键快捷键
         txtSwitchHotkey := this.MainGui.Add("Text", "x" this.GuiXMargin " y+16 Right +0x200", "启用/禁用热键快捷键") 
-        this.SwitchHotkey := this.MainGui.Add("Edit", "x+10 yp-4 w120 Center -TabStop Uppercase vSwitchHotkey", Config.GetCustom("SwitchHotkey"))
+        this.SwitchHotkey := this.MainGui.Add("Edit", "x+10 yp-4 w140 Center -TabStop Uppercase vSwitchHotkey", Config.GetCustom("SwitchHotkey"))
         this.OtherSettingsControls.Push(txtSwitchHotkey)
         this.OtherSettingsControls.Push(this.SwitchHotkey)
 

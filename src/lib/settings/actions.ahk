@@ -8,7 +8,7 @@ EventBus.Subscribe("SettingsCancel", HandleSettingsCancel)
 
 ; 处理重置按键设置事件
 HandleSettingsReset(*) {
-    Result := MsgBox("  确定重置按键为默认设置吗 ？","重置按键设置", "YesNo")
+    Result := MessageBox.Confirm("  确定重置按键为默认设置吗 ？","重置按键设置")
     if (Result == "Yes") {
         EventBus.Publish("HotkeyOff")
         EventBus.Publish("UnsetSwitchKey")
@@ -36,7 +36,7 @@ HandleSettingsSave(*) {
     EventBus.Publish("SetSwitchKey")
     Saver.ResetGameStateIfNeeded()
     EventBus.Publish("GuiHide")
-    MsgBox("设置已保存！后续可从右下角托盘区图标右键菜单打开设置", "保存成功", "Iconi")
+    MessageBox.Info("设置已保存！后续可双击右下角托盘区图标或通过右键菜单打开设置", "保存成功")
 }
 
 ; 处理应用设置事件
@@ -50,7 +50,7 @@ HandleSettingsApply(*) {
     }
     EventBus.Publish("SetSwitchKey")
     Saver.ResetGameStateIfNeeded()
-    MsgBox("设置已应用！", "应用成功")
+    MessageBox.Info("设置已应用！", "应用成功")
 }
 
 ; 处理取消设置事件

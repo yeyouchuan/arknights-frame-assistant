@@ -14,13 +14,15 @@ class Saver {
                 ; 按键冲突提示
                 if (UsedKeys.Has(currentKey)) {
                     prevKeyName := UsedKeys[currentKey]
-                    MsgBox("按键冲突！`n【" currentKey "】 已经被设置为: 【" prevKeyName "】`n请先修改重复的按键。", "保存失败", "Icon!")
+                    MessageBox.Error("按键冲突！`n【" currentKey "】 已经被设置为: 【" prevKeyName "】`n请先修改重复的按键。", "保存失败")
                     Exit
                 }
                 UsedKeys[currentKey] := keyName
             }
         }
         for keyVar, keyName in Constants.CustomNames {
+            if (keyVar != "SwitchHotkey")
+                continue
             if (!SavedObj.HasProp(keyVar))
                 continue
             currentKey := SavedObj.%keyVar%
@@ -28,7 +30,7 @@ class Saver {
                 ; 按键冲突提示
                 if (UsedKeys.Has(currentKey)) {
                     prevKeyName := UsedKeys[currentKey]
-                    MsgBox("按键冲突！`n【" currentKey "】 已经被设置为: 【" prevKeyName "】`n请先修改重复的按键。", "保存失败", "Icon!")
+                    MessageBox.Error("按键冲突！`n【" currentKey "】 已经被设置为: 【" prevKeyName "】`n请先修改重复的按键。", "保存失败")
                     Exit
                 }
                 UsedKeys[currentKey] := keyName
@@ -43,14 +45,14 @@ class Saver {
                 ; 验证新Token
                 tokenResult := VersionChecker.ValidateToken(SavedObj.GitHubToken)
                 if (!tokenResult.valid) {
-                    result := MsgBox("GitHub Token验证失败：" tokenResult.message "`n`n是否仍要保存此Token？", "Token验证失败", "YesNo Icon!")
+                    result := MessageBox.Confirm("GitHub Token验证失败：" tokenResult.message "`n`n是否仍要保存此Token？", "Token验证失败")
                     if (result = "No") {
                         Exit
                     }
                 } else {
                     ; Token有效，更新验证状态
                     VersionChecker.TokenValidated := true
-                    MsgBox("GitHub Token验证成功！`n用户: " tokenResult.username "`nAPI配额: " tokenResult.rateLimit, "Token有效", "Iconi")
+                    MessageBox.Info("GitHub Token验证成功！`n用户: " tokenResult.username "`nAPI配额: " tokenResult.rateLimit, "Token有效")
                 }
             }
         }
@@ -58,9 +60,18 @@ class Saver {
         ; 验证游戏路径
         if (SavedObj.HasProp("GamePath") && SavedObj.GamePath != "") {
             if !FileExist(SavedObj.GamePath) {
-                result := MsgBox("游戏路径不存在：`n" SavedObj.GamePath "`n`n是否仍要保存？", "路径不存在", "YesNo Icon!")
+                result := MessageBox.Confirm("游戏路径不存在：`n" SavedObj.GamePath "`n`n是否仍要保存？", "路径不存在")
                 if (result = "No") {
                     Exit
+                }
+            } else {
+                ; 验证是否为 Arknights.exe
+                SplitPath(SavedObj.GamePath, &fileName)
+                if (fileName != "Arknights.exe") {
+                    result := MessageBox.Confirm("游戏路径不正确：`n" SavedObj.GamePath "`n`n目标文件不是 Arknights.exe，请确保选择正确的游戏可执行文件。`n`n是否仍要保存？", "路径不正确")
+                    if (result = "No") {
+                        Exit
+                    }
                 }
             }
         }

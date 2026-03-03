@@ -21,7 +21,7 @@ class GameLauncher {
             arknightsGamePath := ProcessGetPath(pid)
             GuiManager.SetControlValue("GamePath", arknightsGamePath)
         } else {
-            MsgBox("未检测到游戏进程，请先启动游戏再进行识别", "识别失败")
+            MessageBox.Warning("未检测到游戏进程，请先启动游戏再进行识别", "识别失败")
         }
     }
     
