@@ -76,7 +76,7 @@ class GuiManager {
         AddBindRow(LabelText, KeyVar) {
             controls := []
             txt := this.MainGui.Add("Text", "xs+45 y+16 w90 Right +0x200", LabelText) 
-            edit := this.MainGui.Add("Edit", "x+20 yp-4 w120 Center -TabStop Uppercase v" KeyVar, Config.GetHotkey(KeyVar))
+            edit := this.MainGui.Add("Edit", "x+20 yp-4 w140 Center -TabStop Uppercase v" KeyVar, Config.GetHotkey(KeyVar))
             controls.Push(txt)
             controls.Push(edit)
             return controls
