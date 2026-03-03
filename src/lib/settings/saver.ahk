@@ -62,6 +62,15 @@ class Saver {
                 if (result = "No") {
                     Exit
                 }
+            } else {
+                ; 验证是否为 Arknights.exe
+                SplitPath(SavedObj.GamePath, &fileName)
+                if (fileName != "Arknights.exe") {
+                    result := MessageBox.Confirm("游戏路径不正确：`n" SavedObj.GamePath "`n`n目标文件不是 Arknights.exe，请确保选择正确的游戏可执行文件。`n`n是否仍要保存？", "路径不正确")
+                    if (result = "No") {
+                        Exit
+                    }
+                }
             }
         }
 
