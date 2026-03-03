@@ -7,6 +7,7 @@ class UpdateUI {
     
     ; 下载对话框实例
     static DownloadingDialog := ""
+    static DownloadingCancelBtn := ""
     
     ; 显示更新提示对话框（支持忽略此版本）
     ; params: 包含以下字段的对象
@@ -35,6 +36,9 @@ class UpdateUI {
         this.UpdateDialog.Opt("+Owner")
         this.UpdateDialog.BackColor := "FFFFFF"
         this.UpdateDialog.SetFont("s9", "Microsoft YaHei UI")
+        hWnd := this.UpdateDialog.Hwnd
+        try DllCall("dwmapi\DwmSetWindowAttribute", "ptr", hWnd, "int", 38, "int*", true, "int", 4)
+        
         
         ; 添加图标和消息文本
         if (isManual) {
@@ -94,7 +98,7 @@ class UpdateUI {
     
     ; 显示已是最新版本的提示
     static ShowUpToDateDialog(version) {
-        MsgBox("当前版本 " version " 已是最新版本。", "无需更新", "Iconi")
+        MessageBox.Info("当前版本 " version " 已是最新版本。", "无需更新")
     }
     
     ; 显示更新检查失败的提示
@@ -105,17 +109,17 @@ class UpdateUI {
         
         if (suggestToken) {
             ; 显示带有Token配置引导的对话框
-            result := MsgBox(message "`n`n是否现在配置GitHub Token？", "检查失败", "YesNo Icon!")
+            result := MessageBox.Confirm(message "`n`n是否现在配置GitHub Token？", "检查失败")
             if (result = "Yes") {
                 ; 打开设置界面
                 GuiManager.Show()
             }
         } else {
-            MsgBox(message, "检查失败", "Icon!")
+            MessageBox.Error(message, "检查失败")
         }
     }
     
-    ; 显示正在下载的提示
+    ; 显示正在下载的提示（带取消按钮）
     ; retryCount: 重试次数（0表示首次下载，1+表示重试）
     static ShowDownloadingDialog(retryCount := 0) {
         ; 关闭已存在的下载对话框
@@ -127,6 +131,8 @@ class UpdateUI {
         this.DownloadingDialog.Opt("+AlwaysOnTop +Owner")
         this.DownloadingDialog.BackColor := "FFFFFF"
         this.DownloadingDialog.SetFont("s9", "Microsoft YaHei UI")
+        hWnd := this.DownloadingDialog.Hwnd
+        try DllCall("dwmapi\DwmSetWindowAttribute", "ptr", hWnd, "int", 38, "int*", true, "int", 4)
         
         ; 根据重试次数显示不同消息
         if (retryCount = 0) {
@@ -136,23 +142,51 @@ class UpdateUI {
         }
         
         ; 添加文本
-        this.DownloadingDialog.Add("Text", "x20 y20 w300 Center", message)
+        this.DownloadingDialog.Add("Text", "x20 y20 w300 Center vDownloadText", message)
+        
+        ; 添加取消按钮
+        btnW := 80
+        btnH := 26
+        btnX := (340 - btnW) / 2  ; 窗口宽度340，按钮居中
+        btnY := 60
+        this.DownloadingCancelBtn := this.DownloadingDialog.Add("Button", "x" btnX " y" btnY " w" btnW " h" btnH, "取消下载(&C)")
+        this.DownloadingCancelBtn.OnEvent("Click", (*) => this.OnDownloadCancel())
         
         ; 显示对话框（非模态，不阻塞）
-        this.DownloadingDialog.Show("w340 h80 Center")
+        this.DownloadingDialog.Show("w340 h110 Center")
+    }
+    
+    ; 下载取消按钮点击事件
+    static OnDownloadCancel() {
+        ; 调用下载器的取消方法
+        UpdateDownloader.Cancel()
+        
+        ; 更新UI显示取消状态
+        if (this.DownloadingDialog != "") {
+            try {
+                ; 禁用取消按钮，防止重复点击
+                this.DownloadingCancelBtn.Opt("+Disabled")
+                ; 更新文本为取消中
+                this.DownloadingDialog["DownloadText"].Value := "正在取消下载..."
+            }
+        }
+        
+        ; 发布取消事件
+        EventBus.Publish("UpdateDownloadCancelled")
     }
     
     ; 关闭下载对话框
     static CloseDownloadingDialog() {
         if (this.DownloadingDialog != "") {
-            this.DownloadingDialog.Destroy()
+            try this.DownloadingDialog.Destroy()
             this.DownloadingDialog := ""
+            this.DownloadingCancelBtn := ""
         }
     }
     
     ; 显示下载完成的提示
     static ShowDownloadCompleteDialog() {
-        MsgBox("下载完成！程序将在重启后应用更新。", "下载完成", "Iconi")
+        MessageBox.Info("下载完成！程序将在重启后应用更新。", "下载完成")
     }
     
     ; 显示下载失败的提示
@@ -160,11 +194,16 @@ class UpdateUI {
         if (message = "") {
             message := "下载更新失败，请检查网络连接后重试。"
         }
-        MsgBox(message, "下载失败", "Icon!")
+        MessageBox.Error(message, "下载失败")
+    }
+    
+    ; 显示下载取消的提示
+    static ShowDownloadCancelledDialog() {
+        MessageBox.Info("下载已取消。", "下载取消")
     }
     
     ; 显示自动更新已禁用的提示
     static ShowAutoUpdateDisabledDialog() {
-        MsgBox("自动检查更新已禁用。`n如需开启，请在配置文件中设置 AutoUpdate=1", "提示", "Iconi")
+        MessageBox.Info("自动检查更新已禁用。`n如需开启，请在配置文件中设置 AutoUpdate=1", "提示")
     }
 }
