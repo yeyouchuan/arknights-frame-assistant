@@ -148,7 +148,7 @@ class GuiManager {
         this.MainGui.SetFont("s9 c1994d2")
         hint2 := this.MainGui.Add("Text", "x0 y+15 w" this.GuiWidth " Center", "请确保上方“游戏内帧数”设置与游戏内保持一致，若屏幕刷新率低于120，请关闭游戏内的“垂直同步”")
         this.KeybindControls.Push(hint2)
-        hint3 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "或确保“游戏内帧数”设置与显示器刷新率一致再开启“垂直同步")
+        hint3 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "或确保“游戏内帧数”设置与显示器刷新率一致再开启“垂直同步”")
         this.MainGui.SetFont("s9 cDefault")
         this.KeybindControls.Push(hint3)
 
