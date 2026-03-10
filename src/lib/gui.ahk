@@ -192,6 +192,7 @@ class GuiManager {
         this.BtnManualDownload := this.MainGui.Add("Button", "x+10 yp w" this.BtnW " h24", "手动下载更新")
         this.BtnManualDownload.OnEvent("Click", (*) => EventBus.Publish("OnManualDownload"))
         this.OtherSettingsControls.Push(this.BtnCheckUpdate)
+        this.OtherSettingsControls.Push(this.BtnManualDownload)
         ; github token
         checkboxUseGitHubToken := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vUseGitHubToken", " 使用GitHub Token: ")
         this.MainGui["UseGitHubToken"].Value := Config.GetImportant("UseGitHubToken")
