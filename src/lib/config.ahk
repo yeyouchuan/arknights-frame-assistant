@@ -207,8 +207,10 @@ class Config {
 
         ; 保存自定义设置
         for keyVar, _ in Constants.CustomNames {
+            if (keyVar = "SwitchHotkey")
+                continue
             if settingsMap.HasProp(keyVar) {
-                IniWrite(settingsMap.%keyVar%, this.IniFile, "Custom", keyVar)
+                this.SetCustom(keyVar, settingsMap.%keyVar%)
             }
         }
         for keyVar, _ in Constants.CustomNames {
