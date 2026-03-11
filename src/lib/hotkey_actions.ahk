@@ -385,14 +385,22 @@ ActionOneClickSell(ThisHotkey) {
 }
 ; 一键购买
 ActionOneClickPurchase(ThisHotkey) {
+    oldCtx := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+    if !IsMouseInClient() {
+        DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
+        return
+    }
     Send "{LButton Down}"
     Send "{LButton Up}"
     USleep(40)
     Send "{LButton Down}"
     Send "{LButton Up}"
-    if InStr(ThisHotkey, "Wheel")
+    if InStr(ThisHotkey, "Wheel") {
+        DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
         return
+    }
     PureKeyWait(ThisHotkey)
+    DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
 }
 
 ; == 工具函数 ==
