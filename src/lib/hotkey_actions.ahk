@@ -1,4 +1,5 @@
 ; == 功能实现 ==
+; -- 作战按键 --
 ; 按下暂停
 ActionPressPause(ThisHotkey) {
     Send "{ESC Down}"
@@ -187,6 +188,8 @@ ActionPauseRetreat(ThisHotkey) {
     PureKeyWait(ThisHotkey)
     DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
 }
+
+; -- 快捷按键 --
 ; 模拟鼠标左键点击
 ActionLButtonClick(ThisHotkey) {
     oldCtx := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
