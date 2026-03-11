@@ -451,12 +451,8 @@ class GuiManager {
         }
     }
 
-    ; 切换标签页
-    static SwitchTab(tabName) {
-        if (tabName = this.CurrentTab)
-            return
-        this.CurrentTab := tabName
-        
+    ; 内部：更新标签页UI
+    static _UpdateTabUI(tabName) {
         ; 首先隐藏所有标签页的控件
         this._HideAllControls()
         
@@ -523,6 +519,36 @@ class GuiManager {
             ; 显示其他设置控件
             this._ShowControls(this.OtherSettingsControls)
         }
+    }
+
+    ; 切换标签页
+    static SwitchTab(tabName) {
+        if (tabName = this.CurrentTab)
+            return
+        this.CurrentTab := tabName
+        
+        ; 记录最后选中的标签页（排除"其他设置"）
+        if (tabName != "other") {
+            this.LastActiveTab := tabName
+        }
+        
+        ; 如果当前处于热键禁用状态，只更新UI，不切换热键
+        if (!HotkeyController.HotkeyState) {
+            this._UpdateTabUI(tabName)
+            return
+        }
+        
+        ; 根据标签页切换热键组
+        if (tabName = "keyBind" || tabName = "quick") {
+            HotkeyController.EnableByTab("keyBind")
+        }
+        else if (tabName = "strongHoldProtocol") {
+            HotkeyController.EnableByTab("strongHoldProtocol")
+        }
+        ; "other"标签页不改变热键
+        
+        ; 更新UI
+        this._UpdateTabUI(tabName)
     }
 }
 
