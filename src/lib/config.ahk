@@ -10,8 +10,8 @@ class Constants {
     ; 按键名称映射
     static KeyNames := Map(
         ; 作战按键
-        "PressPause", "额外暂停键 A",
-        "ReleasePause", "额外暂停键 B",
+        "PressPause", "按下暂停",
+        "ReleasePause", "松开暂停",
         "GameSpeed", "切换倍速",
         "PauseSelect", "暂停选中",
         "Skill", "单位技能",
