@@ -115,8 +115,8 @@ class GuiManager {
         this.KeybindControls.Push(AddBindRow("松开暂停", "ReleasePause")*)
         this.KeybindControls.Push(AddBindRow("切换倍速", "GameSpeed")*)
         this.KeybindControls.Push(AddBindRow("暂停选中", "PauseSelect")*)
-        this.KeybindControls.Push(AddBindRow("干员技能", "Skill")*)
-        this.KeybindControls.Push(AddBindRow("干员撤退", "Retreat")*)
+        this.KeybindControls.Push(AddBindRow("单位技能", "Skill")*)
+        this.KeybindControls.Push(AddBindRow("单位撤退", "Retreat")*)
         
         ; 作战按键 - 右列
         this.MainGui.Add("GroupBox", "x" this.ColWidth " ys w" this.ColWidth  " h0 Section vKeybindRightGroup", "")
@@ -129,18 +129,18 @@ class GuiManager {
         this.KeybindControls.Push(AddBindRow("暂停技能", "PauseSkill")*)
         this.KeybindControls.Push(AddBindRow("暂停撤退", "PauseRetreat")*)
         ; 空白占位
-        placeholder1 := this.MainGui.Add("Text", "xs+45 y+-10 w90 h0 Right +0x200")
-        this.KeybindControls.Push(placeholder1)
+        placeholderKeybind := this.MainGui.Add("Text", "xs+45 y+-10 w90 h0 Right +0x200")
+        this.KeybindControls.Push(placeholderKeybind)
 
         ; 作战按键提示语
         this.MainGui.SetFont("s9 c1994d2")
-        hint1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
+        hintKeybind := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
         this.MainGui.SetFont("s9 cDefault")
-        this.KeybindControls.Push(hint1)
+        this.KeybindControls.Push(hintKeybind)
 
         ; 分割线
-        sep1 := this.MainGui.Add("Text", "x" this.GuiXMargin " y+15 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0") ; 分割线
-        this.KeybindControls.Push(sep1)
+        sepKeybind := this.MainGui.Add("Text", "x" this.GuiXMargin " y+15 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0") ; 分割线
+        this.KeybindControls.Push(sepKeybind)
 
         ; 游戏内帧数设置
         txtFrame := this.MainGui.Add("Text", "x45 y+20 w90 Right", "游戏内帧数")
@@ -151,13 +151,14 @@ class GuiManager {
 
         ; 帧数设置提示语
         this.MainGui.SetFont("s9 c1994d2")
-        hint2 := this.MainGui.Add("Text", "x0 y+15 w" this.GuiWidth " Center", "请确保上方“游戏内帧数”设置与游戏内保持一致，若屏幕刷新率低于120，请关闭游戏内的“垂直同步”")
-        this.KeybindControls.Push(hint2)
-        hint3 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "或确保“游戏内帧数”设置与显示器刷新率一致再开启“垂直同步”")
+        hintFrame1 := this.MainGui.Add("Text", "x0 y+15 w" this.GuiWidth " Center", "请确保上方“游戏内帧数”设置与游戏内保持一致，若屏幕刷新率低于120，请关闭游戏内的“垂直同步”")
+        this.KeybindControls.Push(hintFrame1)
+        hintFrame2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "或确保“游戏内帧数”设置与显示器刷新率一致再开启“垂直同步”")
         this.MainGui.SetFont("s9 cDefault")
-        this.KeybindControls.Push(hint3)
+        this.KeybindControls.Push(hintFrame2)
 
         ; -- 快捷按键 --
+        ; 快捷按键 - 左列
         this.MainGui.Add("GroupBox", "x0 y35 w" this.ColWidth " h0 Section vQuickLeftGroup", "")
         this.QuickControls.Push(this.MainGui["QuickLeftGroup"])
 
@@ -173,8 +174,8 @@ class GuiManager {
         this.QuickControls.Push(AddBindRow("肉鸽收取道具", "CollectCollectibles")*)
         this.QuickControls.Push(AddBindRow("返回上级菜单", "Back")*)
         ; 空白占位
-        placeholder1 := this.MainGui.Add("Text", "xs+45 y+-10 w90 h0 Right +0x200")
-        this.QuickControls.Push(placeholder1)
+        placeholderQuick := this.MainGui.Add("Text", "xs+45 y+-10 w90 h0 Right +0x200")
+        this.QuickControls.Push(placeholderQuick)
 
         ; 快捷按键提示语
         this.MainGui.SetFont("s9 c1994d2")
@@ -187,10 +188,10 @@ class GuiManager {
         ; -- 其他设置 --
         this.MainGui.Add("GroupBox", "x0 y45 w" this.ColWidth " h0 Section vOtherSettingsGroup", "")
         ; - 启动与退出设置 -
-        sep2 := this.MainGui.Add("Text", "x" this.GuiXMargin " ys+10 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0 Center") ; 分割线
-        sep2txt := this.MainGui.Add("Text", "x" this.GuiXMargin " xs+50 y+-9 Center ca0a0a0", "  启动与退出设置  ")
-        this.OtherSettingsControls.Push(sep2)
-        this.OtherSettingsControls.Push(sep2txt)
+        sepLaunch := this.MainGui.Add("Text", "x" this.GuiXMargin " ys+10 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0 Center") ; 分割线
+        sepLaunchTxt := this.MainGui.Add("Text", "x" this.GuiXMargin " xs+50 y+-9 Center ca0a0a0", "  启动与退出设置  ")
+        this.OtherSettingsControls.Push(sepLaunch)
+        this.OtherSettingsControls.Push(sepLaunchTxt)
         ; 自动关闭
         checkboxAutoExit := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vAutoExit", " 随游戏进程关闭自动退出（强烈建议开启）")
         this.MainGui["AutoExit"].Value := Config.GetImportant("AutoExit")
@@ -205,10 +206,10 @@ class GuiManager {
         this.OtherSettingsControls.Push(checkboxAutoRunGame)
         ; 识别游戏路径
         this.BtnCheckGamePath := this.MainGui.Add("Button", "x+10 yp w" this.BtnW " h24", "识别游戏路径")
-        hint4 := this.MainGui.Add("Text", "x+15 yp+4 h20 c9c9c9c", "请先启动游戏再进行识别")
+        hintGamePath := this.MainGui.Add("Text", "x+15 yp+4 h20 c9c9c9c", "请先启动游戏再进行识别")
         this.BtnCheckGamePath.OnEvent("Click", (*) => EventBus.Publish("CheckGamePathClick"))
         this.OtherSettingsControls.Push(this.BtnCheckGamePath)
-        this.OtherSettingsControls.Push(hint4)
+        this.OtherSettingsControls.Push(hintGamePath)
         ; 游戏路径
         txtGamePath := this.MainGui.Add("Text", "x" this.GuiXMargin +17 " y+10 h24", " 游戏路径: ")
         editGamePath := this.MainGui.Add("Edit", "x+10 yp-2 w576 h20 vGamePath -Multi +0x1", Config.GetImportant("GamePath"))
@@ -217,10 +218,10 @@ class GuiManager {
         this.MainGui.Add("Text", "yp+30 w0 h0")
 
         ; - 更新设置 -
-        sep3 := this.MainGui.Add("Text", "x" this.GuiXMargin " y+20 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0 Center") ; 分割线
-        sep3txt := this.MainGui.Add("Text", "x" this.GuiXMargin " xs+50 y+-9 Center ca0a0a0", "  更新设置  ")
-        this.OtherSettingsControls.Push(sep3)
-        this.OtherSettingsControls.Push(sep3txt)
+        sepUpdate := this.MainGui.Add("Text", "x" this.GuiXMargin " y+20 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0 Center") ; 分割线
+        sepUpdateTxt := this.MainGui.Add("Text", "x" this.GuiXMargin " xs+50 y+-9 Center ca0a0a0", "  更新设置  ")
+        this.OtherSettingsControls.Push(sepUpdate)
+        this.OtherSettingsControls.Push(sepUpdateTxt)
         ; 自动检查更新
         checkboxAutoUpdate := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vAutoUpdate", " 自动检查更新")
         this.MainGui["AutoUpdate"].Value := Config.GetImportant("AutoUpdate")
@@ -238,26 +239,26 @@ class GuiManager {
         checkboxUseGitHubToken.OnEvent("Click", (*) => this.SetEditDisabled(editGithubToken, checkboxUseGitHubToken.Value))
         editGithubToken := this.MainGui.Add("Edit", "x+10 yp+2 w515 h20 vGitHubToken Password -Multi +0x1", Config.GetImportant("GitHubToken"))
         this.SetEditDisabled(editGithubToken, checkboxUseGitHubToken.Value)
-        hint5 := this.MainGui.Add("Text", "xs+50 y+6 c9c9c9c", "只要没有提示API配额超限，就不需要使用GitHub Token，修改后需保存或应用设置才能生效")
+        hintGithubToken := this.MainGui.Add("Text", "xs+50 y+6 c9c9c9c", "只要没有提示API配额超限，就不需要使用GitHub Token，修改后需保存或应用设置才能生效")
         this.OtherSettingsControls.Push(checkboxUseGitHubToken)
         this.OtherSettingsControls.Push(editGithubToken)
-        this.OtherSettingsControls.Push(hint5)
+        this.OtherSettingsControls.Push(hintGithubToken)
         this.MainGui.Add("Text", "yp+30 w0 h0")
 
         ; - 自定义设置 -
-        sep4 := this.MainGui.Add("Text", "x" this.GuiXMargin " y+20 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0 Center") ; 分割线
-        sep4txt := this.MainGui.Add("Text", "x" this.GuiXMargin " xs+50 y+-9 Center ca0a0a0", "  自定义设置  ")
-        this.OtherSettingsControls.Push(sep4)
-        this.OtherSettingsControls.Push(sep4txt)
+        sepCustom := this.MainGui.Add("Text", "x" this.GuiXMargin " y+20 w" this.GuiWidth - 60 " h1 Backgroundd0d0d0 Center") ; 分割线
+        sepCustomTxt := this.MainGui.Add("Text", "x" this.GuiXMargin " xs+50 y+-9 Center ca0a0a0", "  自定义设置  ")
+        this.OtherSettingsControls.Push(sepCustom)
+        this.OtherSettingsControls.Push(sepCustomTxt)
         ; 技能和撤退点击延迟设置
         txtSkillAndRetreatDelay := this.MainGui.Add("Text", "x" this.GuiXMargin " y+10 Section", "技能和撤退点击延迟")
         this.SkillAndRetreatDelay := this.MainGui.Add("Edit", "x+15 y+-18 w120 h21 vSkillAndRetreatDelay Number", Config.GetCustom("SkillAndRetreatDelay"))
         updownSkillAndRetreatDelay := this.MainGui.Add("UpDown", ,Config.GetCustom("SkillAndRetreatDelay"))
-        hint6 := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中干员到按下【技能】和【撤退】的时长，单位为毫秒")
+        hintSkillAndRetreatDelay := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中单位到按下【技能】【撤退】【出售】的时长，单位为毫秒")
         this.OtherSettingsControls.Push(txtSkillAndRetreatDelay)
         this.OtherSettingsControls.Push(this.SkillAndRetreatDelay)
         this.OtherSettingsControls.Push(updownSkillAndRetreatDelay)
-        this.OtherSettingsControls.Push(hint6)
+        this.OtherSettingsControls.Push(hintSkillAndRetreatDelay)
         ; 启用/禁用热键快捷键
         txtSwitchHotkey := this.MainGui.Add("Text", "x" this.GuiXMargin " y+16 Right +0x200", "启用/禁用热键快捷键") 
         this.SwitchHotkey := this.MainGui.Add("Edit", "x+10 yp-4 w140 Center -TabStop Uppercase vSwitchHotkey", Config.GetCustom("SwitchHotkey"))

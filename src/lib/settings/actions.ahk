@@ -8,7 +8,7 @@ EventBus.Subscribe("SettingsCancel", HandleSettingsCancel)
 
 ; 处理重置按键设置事件
 HandleSettingsReset(*) {
-    Result := MessageBox.Confirm("  确定重置按键为默认设置吗 ？","重置按键设置")
+    Result := MessageBox.Confirm("  确定重置*所有*按键为默认设置吗 ？","重置按键设置")
     if (Result == "Yes") {
         EventBus.Publish("HotkeyOff")
         EventBus.Publish("UnsetSwitchKey")

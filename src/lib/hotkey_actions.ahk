@@ -194,7 +194,7 @@ ActionLButtonClick(ThisHotkey) {
         DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
         return
     }
-    Send "{Lbutton Down}"
+    Send "{LButton Down}"
     if InStr(ThisHotkey, "Wheel") {
         Send "{LButton Up}"
         DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
