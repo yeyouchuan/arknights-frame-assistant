@@ -207,8 +207,10 @@ ActionLButtonClick(ThisHotkey) {
 ; 放弃行动
 ActionCeaseOperations(ThisHotkey) {
     Send "{v Down}"
+    Send "{ESC Down}"
     USleep(50)
     Send "{v Up}"
+    Send "{ESC Up}"
     if InStr(ThisHotkey, "Wheel")
         return
     PureKeyWait(ThisHotkey)
@@ -239,8 +241,10 @@ ActionSkip(ThisHotkey) {
 }
 ; 返回上级菜单
 ActionBack(ThisHotkey) {
+    Send "{v Down}"
     Send "{ESC Down}"
     USleep(50)
+    Send "{v Up}"
     Send "{ESC Up}"
     if InStr(ThisHotkey, "Wheel")
         return
