@@ -521,6 +521,9 @@ class GuiManager {
             ; 显示其他设置控件
             this._ShowControls(this.OtherSettingsControls)
         }
+        EventBus.Publish("GuiUpdateHotkeyControls")
+        EventBus.Publish("GuiUpdateImportantControls")
+        EventBus.Publish("GuiUpdateCustomControls")
     }
 
     ; 切换标签页

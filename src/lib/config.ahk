@@ -146,6 +146,11 @@ class Config {
     static GetHotkey(key) {
         if !this._IsLoaded
             this.LoadFromIni()
+        else {
+            for keyVar, defaultVal in this._DefaultHotkeys {
+                this._HotkeySettings[keyVar] := IniRead(this.IniFile, "Hotkeys", keyVar, defaultVal)
+            }
+        }
         return this._HotkeySettings.Has(key) ? this._HotkeySettings[key] : ""
     }
     
@@ -158,6 +163,21 @@ class Config {
     static GetImportant(key) {
         if !this._IsLoaded
             this.LoadFromIni()
+        else {
+            for keyVar, defaultVal in this._DefaultImportant {
+                if (keyVar = "GitHubToken") {
+                    ; Token 需要解码
+                    encodedToken := IniRead(this.IniFile, "Main", keyVar, defaultVal)
+                    ; 调试输出（仅记录长度，不记录 Token 值）
+                    OutputDebug("[Config] Token 读取 - INI 中的值长度：" StrLen(encodedToken))
+                    decodedToken := this.DecodeToken(encodedToken)
+                    OutputDebug("[Config] Token 读取 - 解码后长度：" StrLen(decodedToken))
+                    this._ImportantSettings[keyVar] := decodedToken
+                } else {
+                    this._ImportantSettings[keyVar] := IniRead(this.IniFile, "Main", keyVar, defaultVal)
+                }
+            }
+        }
         return this._ImportantSettings.Has(key) ? this._ImportantSettings[key] : ""
     }
     
@@ -170,6 +190,11 @@ class Config {
     static GetCustom(key) {
         if !this._IsLoaded
             this.LoadFromIni()
+        else {
+            for keyVar, defaultVal in this._DefaultCustom {
+                this._CustomSettings[keyVar] := IniRead(this.IniFile, "Custom", keyVar, defaultVal)
+            }
+        }
         return this._CustomSettings.Has(key) ? this._CustomSettings[key] : ""
     }
     
