@@ -104,13 +104,24 @@ class HotkeyController {
             hotkeyValue := Config.GetHotkey(keyVar)
             if (hotkeyValue != "" && this.ActionCallbacks.Has(keyVar)) {
                 callback := this.ActionCallbacks[keyVar]
-                if (hotkeyValue ~= "i)\b(E|Q|F|G|V|W|A|S|D|G|X|C|RButton|MButton|Space|Escape|Tab)\b$") {
-                    Hotkey(hotkeyValue, callback, "On")
-                    HotkeyController.ActiveHotkeys.Set(hotkeyValue, hotkeyValue)
-                }
-                else {
-                    Hotkey("~" hotkeyValue, callback, "On")
-                    HotkeyController.ActiveHotkeys.Set("~" hotkeyValue, "~" hotkeyValue)
+                if (keyvar == "ReleasePause" && !InStr(hotkeyValue, "Wheel")) {
+                    if (hotkeyValue ~= "i)\b(E|Q|F|G|V|W|A|S|D|G|X|C|RButton|MButton|Space|Escape|Tab)\b$") {
+                        Hotkey(hotkeyValue " Up", callback, "On")
+                        HotkeyController.ActiveHotkeys.Set(hotkeyValue " Up", hotkeyValue " Up")
+                    }
+                    else {
+                        Hotkey("~" hotkeyValue " Up", callback, "On")
+                        HotkeyController.ActiveHotkeys.Set("~" hotkeyValue " Up", "~" hotkeyValue " Up")
+                    }
+                } else {
+                    if (hotkeyValue ~= "i)\b(E|Q|F|G|V|W|A|S|D|G|X|C|RButton|MButton|Space|Escape|Tab)\b$") {
+                        Hotkey(hotkeyValue, callback, "On")
+                        HotkeyController.ActiveHotkeys.Set(hotkeyValue, hotkeyValue)
+                    }
+                    else {
+                        Hotkey("~" hotkeyValue, callback, "On")
+                        HotkeyController.ActiveHotkeys.Set("~" hotkeyValue, "~" hotkeyValue)
+                    }
                 }
             }
         }

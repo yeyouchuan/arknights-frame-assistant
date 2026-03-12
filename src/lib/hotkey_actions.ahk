@@ -11,9 +11,6 @@ ActionPressPause(ThisHotkey) {
 }
 ; 松开暂停
 ActionReleasePause(ThisHotkey) {
-    if InStr(ThisHotkey, "Wheel") == 0 {
-        PureKeyWait(ThisHotkey)
-    }
     Send "{Space Down}"
     USleep(50)
     Send "{Space Up}"
@@ -90,7 +87,6 @@ ActionPauseSelect(ThisHotkey) {
     }
     PureKeyWait(ThisHotkey)
     DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
-
 }
 ; 干员技能
 ActionSkill(ThisHotkey) {
