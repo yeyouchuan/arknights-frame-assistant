@@ -13,6 +13,8 @@ class GuiManager {
     static GuiFrame := ""
     static SkillAndRetreatDelay := ""
     static SwitchHotkey := ""
+    static IsModified := false
+    static IsOnStrongHoldProtocol := false
     
     ; 窗口尺寸常量
     static GuiWidth := 720
@@ -136,7 +138,7 @@ class GuiManager {
         ; 常规作战提示语
         this.MainGui.SetFont("s9 c1994d2")
         hintKeybind1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
-        hintKeybind2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "！！此页面内按键与“卫戍协议”按键互不干扰，位于此页面时“卫戍协议”按键将被禁用！！")
+        hintKeybind2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", " ** 为避免冲突，切换到此页面时“卫戍协议”按键将被禁用 ** ")
         this.MainGui.SetFont("s9 cDefault")
         this.KeybindControls.Push(hintKeybind1)
         this.KeybindControls.Push(hintKeybind2)
@@ -148,6 +150,7 @@ class GuiManager {
         ; 游戏内帧数设置
         txtFrame := this.MainGui.Add("Text", "x45 y+20 w90 Right", "游戏内帧数")
         this.GuiFrame := this.MainGui.Add("DropDownList", "x+20 y+-18 w120 vFrame AltSubmit", ["30", "60", "120"])
+        this.GuiFrame.OnEvent("Change", (*) => this.SetIsModifiedTrue())
         this.MainGui["Frame"].Value := Config.GetImportant("Frame")
         this.KeybindControls.Push(txtFrame)
         this.KeybindControls.Push(this.GuiFrame)
@@ -203,7 +206,7 @@ class GuiManager {
         ; 快捷功能提示语
         this.MainGui.SetFont("s9 c1994d2")
         hintQuick1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
-        hintQuick2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "！！此页面内按键与“卫戍协议”按键互不干扰，位于此页面时“卫戍协议”按键将被禁用！！")
+        hintQuick2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", " ** 为避免冲突，切换到此页面时“卫戍协议”按键将被禁用 ** ")
         this.MainGui.SetFont("s9 cDefault")
         this.QuickControls.Push(hintQuick1)
         this.QuickControls.Push(hintQuick2)
@@ -238,7 +241,7 @@ class GuiManager {
         ; 卫戍协议提示语
         this.MainGui.SetFont("s9 c1994d2")
         hintStrongHoldProtocol1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的卫戍协议按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
-        hintStrongHoldProtocol2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "！！此页面内按键为独立按键，与“常规作战”、“快捷功能”互不干扰，位于此页面时“常规作战”、“快捷功能”将被禁用！！")
+        hintStrongHoldProtocol2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", " ** 为避免冲突，切换到此页面时“常规作战”、“快捷功能”将被禁用 ** ")
         this.MainGui.SetFont("s9 cDefault")
         this.StrongHoldProtocolControls.Push(hintStrongHoldProtocol1)
         this.StrongHoldProtocolControls.Push(hintStrongHoldProtocol2)
@@ -252,14 +255,17 @@ class GuiManager {
         this.OtherSettingsControls.Push(sepLaunchTxt)
         ; 自动关闭
         checkboxAutoExit := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vAutoExit", " 随游戏进程关闭自动退出（强烈建议开启）")
+        checkboxAutoExit.OnEvent("Click", (*) => this.SetIsModifiedTrue())
         this.MainGui["AutoExit"].Value := Config.GetImportant("AutoExit")
         this.OtherSettingsControls.Push(checkboxAutoExit)
         ; 自动打开设置
         checkboxAutoOpenSettings := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vAutoOpenSettings", " 启动时打开设置窗口")
+        checkboxAutoOpenSettings.OnEvent("Click", (*) => this.SetIsModifiedTrue())
         this.MainGui["AutoOpenSettings"].Value := Config.GetImportant("AutoOpenSettings")
         this.OtherSettingsControls.Push(checkboxAutoOpenSettings)
         ; 自动启动游戏
         checkboxAutoRunGame := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vAutoRunGame", " 同时启动明日方舟")
+        checkboxAutoRunGame.OnEvent("Click", (*) => this.SetIsModifiedTrue())
         this.MainGui["AutoRunGame"].Value := Config.GetImportant("AutoRunGame")
         this.OtherSettingsControls.Push(checkboxAutoRunGame)
         ; 识别游戏路径
@@ -271,6 +277,7 @@ class GuiManager {
         ; 游戏路径
         txtGamePath := this.MainGui.Add("Text", "x" this.GuiXMargin +17 " y+10 h24", " 游戏路径: ")
         editGamePath := this.MainGui.Add("Edit", "x+10 yp-2 w576 h20 vGamePath -Multi +0x1", Config.GetImportant("GamePath"))
+        editGamePath.OnEvent("Change", (*) => this.SetIsModifiedTrue())
         this.OtherSettingsControls.Push(txtGamePath)
         this.OtherSettingsControls.Push(editGamePath)
         this.MainGui.Add("Text", "yp+30 w0 h0")
@@ -282,6 +289,7 @@ class GuiManager {
         this.OtherSettingsControls.Push(sepUpdateTxt)
         ; 自动检查更新
         checkboxAutoUpdate := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vAutoUpdate", " 自动检查更新")
+        checkboxAutoUpdate.OnEvent("Click", (*) => this.SetIsModifiedTrue())
         this.MainGui["AutoUpdate"].Value := Config.GetImportant("AutoUpdate")
         this.OtherSettingsControls.Push(checkboxAutoUpdate)
         ; 手动检查更新
@@ -293,6 +301,7 @@ class GuiManager {
         this.OtherSettingsControls.Push(this.BtnManualDownload)
         ; github token
         checkboxUseGitHubToken := this.MainGui.Add("Checkbox", "x" this.GuiXMargin " y+10 h24 vUseGitHubToken", " 使用GitHub Token: ")
+        checkboxUseGitHubToken.OnEvent("Click", (*) => this.SetIsModifiedTrue())
         this.MainGui["UseGitHubToken"].Value := Config.GetImportant("UseGitHubToken")
         checkboxUseGitHubToken.OnEvent("Click", (*) => this.SetEditDisabled(editGithubToken, checkboxUseGitHubToken.Value))
         editGithubToken := this.MainGui.Add("Edit", "x+10 yp+2 w515 h20 vGitHubToken Password -Multi +0x1", Config.GetImportant("GitHubToken"))
@@ -311,6 +320,7 @@ class GuiManager {
         ; 技能和撤退点击延迟设置
         txtSkillAndRetreatDelay := this.MainGui.Add("Text", "x" this.GuiXMargin " y+10 Section", "技能和撤退点击延迟")
         this.SkillAndRetreatDelay := this.MainGui.Add("Edit", "x+15 y+-18 w120 h21 vSkillAndRetreatDelay Number", Config.GetCustom("SkillAndRetreatDelay"))
+        this.SkillAndRetreatDelay.OnEvent("Change", (*) => this.SetIsModifiedTrue())
         updownSkillAndRetreatDelay := this.MainGui.Add("UpDown", ,Config.GetCustom("SkillAndRetreatDelay"))
         hintSkillAndRetreatDelay := this.MainGui.Add("Text", "x+15 ys c9c9c9c", "从选中单位到按下【技能】【撤退】【出售】的时长，单位为毫秒")
         this.OtherSettingsControls.Push(txtSkillAndRetreatDelay)
@@ -420,6 +430,20 @@ class GuiManager {
             ctrl.Opt("+Disabled")
     }
 
+    ; 将修改状态改为已修改
+    static SetIsModifiedTrue() {
+        if (this.IsModified == true)
+            return
+        this.IsModified := true
+    }
+
+    ; 将修改状态改为未修改
+    static SetIsModifiedFalse() {
+        if (this.IsModified == false)
+            return
+        this.IsModified := false
+    }
+
     ; 内部：隐藏所有标签页的控件
     static _HideAllControls() {
         for ctrl in this.KeybindControls {
@@ -465,6 +489,11 @@ class GuiManager {
             this.TxtQuick.SetFont("cDefault")   ; 默认色
             this.TxtStrongHoldProtocol.SetFont("cDefault")  ; 默认色
             this.TxtOther.SetFont("cDefault")   ; 默认色
+
+            ; 更新标签文本
+            this.TxtKeybind.text := "常规作战 √"
+            this.TxtQuick.text := "快捷操作 √"
+            this.TxtStrongHoldProtocol.text := "卫戍协议 ×"
             
             ; 移动指示线
             this.TxtKeybind.GetPos(&x)
@@ -481,6 +510,11 @@ class GuiManager {
             this.TxtQuick.SetFont("c1994d2")     ; 蓝色（选中）
             this.TxtStrongHoldProtocol.SetFont("cDefault")  ; 默认色
             this.TxtOther.SetFont("cDefault")    ; 默认色
+
+            ; 更新标签文本
+            this.TxtKeybind.text := "常规作战 √"
+            this.TxtQuick.text := "快捷操作 √"
+            this.TxtStrongHoldProtocol.text := "卫戍协议 ×"
             
             ; 移动指示线
             this.TxtQuick.GetPos(&x)
@@ -497,6 +531,11 @@ class GuiManager {
             this.TxtQuick.SetFont("cDefault")    ; 默认色
             this.TxtStrongHoldProtocol.SetFont("c1994d2")  ; 蓝色（选中）
             this.TxtOther.SetFont("cDefault")    ; 默认色
+
+            ; 更新标签文本
+            this.TxtKeybind.text := "常规作战 ×"
+            this.TxtQuick.text := "快捷操作 ×"
+            this.TxtStrongHoldProtocol.text := "卫戍协议 √"
             
             ; 移动指示线
             this.TxtStrongHoldProtocol.GetPos(&x)
@@ -530,6 +569,11 @@ class GuiManager {
     static SwitchTab(tabName) {
         if (tabName = this.CurrentTab)
             return
+        if (this.IsModified == true) {
+            result := MessageBox.Confirm("  修改尚未保存，确定离开此页面吗 ？","保存提示")
+            if (result == "No")
+                return
+        }
         this.CurrentTab := tabName
         
         ; 记录最后选中的标签页（排除"其他设置"）
@@ -546,14 +590,27 @@ class GuiManager {
         ; 根据标签页切换热键组
         if (tabName = "keyBind" || tabName = "quick") {
             HotkeyController.EnableByTab("keyBind")
+            if (this.IsOnStrongHoldProtocol == true) {
+                this.IsOnStrongHoldProtocol := false
+                TrayTip
+                TrayTip("已退出卫戍协议模式", "AFA")
+            }
         }
         else if (tabName = "strongHoldProtocol") {
             HotkeyController.EnableByTab("strongHoldProtocol")
+            if (this.IsOnStrongHoldProtocol == false) {
+                this.IsOnStrongHoldProtocol := true
+                TrayTip
+                TrayTip("已启用卫戍协议模式", "AFA")
+            }
         }
         ; "other"标签页不改变热键
         
         ; 更新UI
         this._UpdateTabUI(tabName)
+
+        ; 将修改状态改回未修改
+        this.SetIsModifiedFalse()
     }
 }
 

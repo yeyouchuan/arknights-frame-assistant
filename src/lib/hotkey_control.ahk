@@ -176,6 +176,7 @@ class HotkeyController {
         if(HotkeyController.HotkeyState == true) {
             HotkeyController.HotkeyOff()
             HotkeyController.HotkeyState := false
+            GuiManager.IsOnStrongHoldProtocol := false
             TrayTip
             TrayTip("热键已禁用", "AFA")
             A_IconTip := "AFA`n热键已禁用"
@@ -185,6 +186,8 @@ class HotkeyController {
             HotkeyController.HotkeyState := true
             ; 根据最后选中的标签页启用对应热键组
             this.EnableByTab(GuiManager.LastActiveTab)
+            if (GuiManager.LastActiveTab == "strongHoldProtocol")
+                GuiManager.IsOnStrongHoldProtocol := true
             TrayTip
             TrayTip("热键已启用", "AFA")
             A_IconTip := "AFA`n热键已启用"
