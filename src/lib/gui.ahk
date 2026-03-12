@@ -144,8 +144,9 @@ class GuiManager {
         ; 常规作战提示语
         this.MainGui.SetFont("s9 c1994d2")
         hintKeybind1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
-        hintKeybind2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", " ** 为避免冲突，切换到此页面时“卫戍协议”按键将被禁用 ** ")
-        this.MainGui.SetFont("s9 cDefault")
+        this.MainGui.SetFont("s9 c1994d2 bold")
+        hintKeybind2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "为避免冲突，切换到此页面时“卫戍协议”按键将被禁用")
+        this.MainGui.SetFont("s9 cDefault Norm")
         this.KeybindControls.Push(hintKeybind1)
         this.KeybindControls.Push(hintKeybind2)
 
@@ -192,8 +193,9 @@ class GuiManager {
         ; 快捷操作提示语
         this.MainGui.SetFont("s9 c1994d2")
         hintQuick1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
-        hintQuick2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", " ** 为避免冲突，切换到此页面时“卫戍协议”按键将被禁用 ** ")
-        this.MainGui.SetFont("s9 cDefault")
+        this.MainGui.SetFont("s9 c1994d2 bold")
+        hintQuick2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "为避免冲突，切换到此页面时“卫戍协议”按键将被禁用")
+        this.MainGui.SetFont("s9 cDefault Norm")
         this.QuickControls.Push(hintQuick1)
         this.QuickControls.Push(hintQuick2)
 
@@ -227,8 +229,9 @@ class GuiManager {
         ; 卫戍协议提示语
         this.MainGui.SetFont("s9 c1994d2")
         hintStrongHoldProtocol1 := this.MainGui.Add("Text", "x0 yp+40 w" this.GuiWidth " Center", "请确保游戏内的卫戍协议按键为默认设置，点击输入框修改按键，使用【BACKSPACE】清除按键")
-        hintStrongHoldProtocol2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", " ** 为避免冲突，切换到此页面时“常规作战”、“快捷操作”将被禁用 ** ")
-        this.MainGui.SetFont("s9 cDefault")
+        this.MainGui.SetFont("s9 c1994d2 bold")
+        hintStrongHoldProtocol2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "为避免冲突，切换到此页面时“常规作战”、“快捷操作”将被禁用")
+        this.MainGui.SetFont("s9 cDefault Norm")
         this.StrongHoldProtocolControls.Push(hintStrongHoldProtocol1)
         this.StrongHoldProtocolControls.Push(hintStrongHoldProtocol2)
 
