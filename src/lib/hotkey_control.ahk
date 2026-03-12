@@ -94,6 +94,9 @@ class HotkeyController {
     ; 已激活热键映射表
     static ActiveHotkeys := Map()
 
+    ; 已激活启用/禁用热键快捷键
+    static ActiveSwitchHotkey := ""
+
     ; 启用热键
     static HotkeyOn(*) {
         HotIfWinActive("ahk_exe Arknights.exe")
@@ -199,8 +202,10 @@ class HotkeyController {
     static SetSwitchKey() {
         HotIfWinActive("ahk_exe Arknights.exe")
         switchKey := Config.GetCustom("SwitchHotkey")
-        if (switchKey != "")
+        if (switchKey != "") {
             Hotkey(switchKey, this.SwitchHotkey, "On")
+            this.ActiveSwitchHotkey := switchKey
+        }
         if (switchKey == "") {
             A_TrayMenu.Rename("2&", "启用/禁用热键")
             return
@@ -210,7 +215,7 @@ class HotkeyController {
     }
     ; 解除设置热键启用/禁用快捷键
     static UnsetSwitchKey() {
-        switchKey := Config.GetCustom("SwitchHotkey")
+        switchKey := this.ActiveSwitchHotkey
         if (switchKey != "")
             Hotkey(switchKey, this.SwitchHotkey, "Off")
         A_TrayMenu.Rename("2&", "启用/禁用热键")
