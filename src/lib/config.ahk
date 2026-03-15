@@ -48,7 +48,7 @@ class Constants {
     static ImportantNames := Map(
         "AutoExit", "自动退出",
         "AutoOpenSettings", "自动打开设置界面",
-        "Frame", "游戏内帧数设置",
+        "Frame", "游戏内帧率设置",
         "AutoUpdate", "自动检查更新",
         "LastDismissedVersion", "上次忽略的更新版本",
         "UseGitHubToken", "是否使用GitHub Token",
