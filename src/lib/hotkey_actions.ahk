@@ -358,9 +358,9 @@ ActionUpgrade(ThisHotkey) {
 }
 ; 出售/销毁
 ActionSell(ThisHotkey) {
-    Send "{X Down}"
+    Send "{x Down}"
     USleep(50)
-    Send "{X Up}"
+    Send "{x Up}"
     if InStr(ThisHotkey, "Wheel")
         return
     PureKeyWait(ThisHotkey)
@@ -384,9 +384,9 @@ ActionOneClickSell(ThisHotkey) {
     Send "{LButton Down}"
     Send "{LButton Up}"
     USleep(State.ClickDelay)
-    Send "{X Down}"
+    Send "{x Down}"
     USleep(50)
-    Send "{X Up}"
+    Send "{x Up}"
     if InStr(ThisHotkey, "Wheel") {
         DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
         return
