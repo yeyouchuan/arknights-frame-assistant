@@ -64,12 +64,14 @@ class UpdateDownloader {
             ; 验证文件是否成功创建
             ; 发布下载完成事件
             ; 调用完成回调（如果提供且是函数）
-            ; 新实现：以上流程改为异步事件驱动下载，由下载会话对象分块写入文件并上报进度
+            ; 新实现：以上流程改为 PowerShell 子进程分块下载，由会话对象轮询进度文件并上报进度
             session := UpdateDownloadSession(params, downloadUrl, tempFile, remoteVersion)
             this.CurrentSession := session
             session.Start()
-            while !session.IsDone
-                Sleep(50)
+            while !session.IsDone {
+                session.Poll()
+                Sleep(100)
+            }
             return session.Result
             
         } catch Error as e {
@@ -145,23 +147,34 @@ class UpdateDownloadSession {
         this.DownloadedBytes := 0
         this.HasContentLength := false
         this.Result := {success: false, error: "下载未开始"}
+        this.WorkerPid := 0
+        this.WorkerScript := ""
+        this.ProgressFile := ""
     }
 
     ; 启动异步下载
     Start() {
+        tempDir := A_Temp "\ArknightsFrameAssistant"
+        if !DirExist(tempDir)
+            DirCreate(tempDir)
+
+        this.ProgressFile := tempDir "\download_" A_TickCount "_state.txt"
+        this.WorkerScript := tempDir "\download_" A_TickCount "_worker.ps1"
+
         if FileExist(this.TempFile) {
             try FileDelete(this.TempFile)
         }
+        if FileExist(this.ProgressFile) {
+            try FileDelete(this.ProgressFile)
+        }
+        if FileExist(this.WorkerScript) {
+            try FileDelete(this.WorkerScript)
+        }
 
-        this.FileObj := FileOpen(this.TempFile, "w")
-        if !IsObject(this.FileObj)
-            throw Error("无法创建临时文件")
-
-        this.Http := ComObject("WinHttp.WinHttpRequest.5.1")
-        UpdateDownloader.CurrentHttp := this.Http
-        ComObjConnect(this.Http, this)
-        this.Http.Open("GET", this.DownloadUrl, true)
-        this.Http.Send()
+        FileAppend(this.BuildWorkerScript(), this.WorkerScript, "UTF-8")
+        command := 'powershell -NoProfile -ExecutionPolicy Bypass -File "' this.WorkerScript '" -Url "' this.DownloadUrl '" -OutFile "' this.TempFile '" -StateFile "' this.ProgressFile '"'
+        Run(command, , "Hide", &pid)
+        this.WorkerPid := pid
     }
 
     ; 取消下载
@@ -172,116 +185,41 @@ class UpdateDownloadSession {
         this.IsCancelled := true
         UpdateDownloader.IsCancelled := true
 
-        if (this.Http != "") {
-            try this.Http.Abort()
+        if (this.WorkerPid) {
+            try ProcessClose(this.WorkerPid)
         }
-
-        this.CompleteCancelled()
     }
 
-    ; 响应开始时读取总大小，用于计算百分比
-    OnResponseStart(status, contentType, *) {
-        if (this.IsDone || this.IsCancelled)
-            return
-
-        contentLength := ""
-        try contentLength := this.Http.GetResponseHeader("Content-Length")
-        if (contentLength != "" && RegExMatch(contentLength, "^\d+$")) {
-            this.TotalBytes := contentLength + 0
-            this.HasContentLength := this.TotalBytes > 0
-        } else {
-            this.TotalBytes := 0
-            this.HasContentLength := false
-        }
-
-        this.ReportProgress()
-    }
-
-    ; 每次收到数据块时立即写入临时文件
-    OnResponseDataAvailable(data, *) {
-        if (this.IsDone || this.IsCancelled)
-            return
-
-        byteCount := 0
-        dataPtr := this.LockSafeArray(data, &byteCount)
-        if (byteCount <= 0 || dataPtr = 0) {
-            if (dataPtr != 0)
-                this.UnlockSafeArray(data)
-            return
-        }
-
-        try {
-            this.FileObj.RawWrite(dataPtr, byteCount)
-        } finally {
-            this.UnlockSafeArray(data)
-        }
-
-        this.DownloadedBytes += byteCount
-        this.ReportProgress()
-    }
-
-    ; 下载完成后校验文件并回调完成逻辑
-    OnResponseFinished(*) {
+    ; 轮询下载进度与下载结果
+    Poll() {
         if (this.IsDone)
             return
 
-        if (this.IsCancelled) {
+        state := this.ReadState()
+        if (state.Status = "downloading") {
+            this.DownloadedBytes := state.DownloadedBytes
+            this.TotalBytes := state.TotalBytes
+            this.HasContentLength := state.HasContentLength
+            this.ReportProgress()
+        } else if (state.Status = "completed") {
+            this.DownloadedBytes := state.DownloadedBytes
+            this.TotalBytes := state.TotalBytes
+            this.HasContentLength := state.HasContentLength
+            this.CompleteSuccess()
+            return
+        } else if (state.Status = "error") {
+            this.Fail(state.ErrorMessage != "" ? state.ErrorMessage : "下载失败")
+            return
+        }
+
+        if (this.IsCancelled && !ProcessExist(this.WorkerPid)) {
             this.CompleteCancelled()
             return
         }
 
-        finalStatus := 0
-        try finalStatus := this.Http.Status
-        if (finalStatus != 200) {
-            finalStatusText := ""
-            try finalStatusText := this.Http.StatusText
-            this.Fail("HTTP错误: " finalStatus " - " finalStatusText)
-            return
+        if (!this.IsCancelled && this.WorkerPid && !ProcessExist(this.WorkerPid) && state.Status = "") {
+            this.Fail("下载失败: 下载进程异常退出")
         }
-
-        this.CloseFile()
-
-        if !UpdateDownloader.VerifyDownload(this.TempFile) {
-            this.Fail("文件保存失败")
-            return
-        }
-
-        if (this.HasContentLength && this.TotalBytes > 0)
-            this.DownloadedBytes := this.TotalBytes
-        else
-            this.DownloadedBytes := FileGetSize(this.TempFile)
-
-        this.ReportProgress(true)
-
-        result := {
-            success: true,
-            tempFile: this.TempFile,
-            remoteVersion: this.RemoteVersion
-        }
-
-        EventBus.Publish("UpdateDownloadComplete", result)
-
-        if (this.Params.HasProp("onComplete") && (Type(this.Params.onComplete) = "Func" || Type(this.Params.onComplete) = "Closure" || Type(this.Params.onComplete) = "BoundFunc")) {
-            callback := this.Params.onComplete
-            callback.Call(result)
-        }
-
-        this.CleanupHttp()
-        this.Result := result
-        this.IsDone := true
-    }
-
-    ; 下载错误处理
-    OnError(errorNumber, errorDescription, *) {
-        if (this.IsDone)
-            return
-
-        if (this.IsCancelled || UpdateDownloader.IsCancelled) {
-            this.CompleteCancelled()
-            return
-        }
-
-        this.Fail("下载失败: " errorDescription)
     }
 
     ; 上报下载进度
@@ -312,9 +250,9 @@ class UpdateDownloadSession {
         if (this.IsDone)
             return
 
-        this.CloseFile()
+        this.KillWorker()
         this.DeleteTempFile()
-        this.CleanupHttp()
+        this.CleanupWorkerFiles()
 
         errorInfo := {
             message: message,
@@ -322,8 +260,10 @@ class UpdateDownloadSession {
             version: this.RemoteVersion
         }
 
+        ; 发布下载错误事件
         EventBus.Publish("UpdateDownloadError", errorInfo)
-
+        
+        ; 调用错误回调（如果提供且是函数）
         if (this.Params.HasProp("onError") && (Type(this.Params.onError) = "Func" || Type(this.Params.onError) = "Closure" || Type(this.Params.onError) = "BoundFunc")) {
             callback := this.Params.onError
             callback.Call(errorInfo)
@@ -341,9 +281,9 @@ class UpdateDownloadSession {
         if (this.IsDone)
             return
 
-        this.CloseFile()
+        this.KillWorker()
         this.DeleteTempFile()
-        this.CleanupHttp()
+        this.CleanupWorkerFiles()
 
         if (this.Params.HasProp("onCancel") && (Type(this.Params.onCancel) = "Func" || Type(this.Params.onCancel) = "Closure" || Type(this.Params.onCancel) = "BoundFunc")) {
             callback := this.Params.onCancel
@@ -358,21 +298,50 @@ class UpdateDownloadSession {
         this.IsDone := true
     }
 
-    ; 清理HTTP引用与事件连接
-    CleanupHttp() {
-        if (this.Http != "") {
-            try ComObjConnect(this.Http)
+    ; 下载完成后校验文件并回调完成逻辑
+    CompleteSuccess() {
+        if (this.IsDone)
+            return
+
+        this.CleanupWorkerFiles()
+
+        if !UpdateDownloader.VerifyDownload(this.TempFile) {
+            this.Fail("文件保存失败")
+            return
         }
-        this.Http := ""
-        UpdateDownloader.CurrentHttp := ""
+
+        if (this.HasContentLength && this.TotalBytes > 0)
+            this.DownloadedBytes := this.TotalBytes
+        else
+            this.DownloadedBytes := FileGetSize(this.TempFile)
+
+        this.ReportProgress(true)
+
+        result := {
+            success: true,
+            tempFile: this.TempFile,
+            remoteVersion: this.RemoteVersion
+        }
+
+        ; 发布下载完成事件
+        EventBus.Publish("UpdateDownloadComplete", result)
+        
+        ; 调用完成回调（如果提供且是函数）
+        if (this.Params.HasProp("onComplete") && (Type(this.Params.onComplete) = "Func" || Type(this.Params.onComplete) = "Closure" || Type(this.Params.onComplete) = "BoundFunc")) {
+            callback := this.Params.onComplete
+            callback.Call(result)
+        }
+
+        this.Result := result
+        this.IsDone := true
     }
 
-    ; 关闭文件句柄
-    CloseFile() {
-        if (this.FileObj != "") {
-            try this.FileObj.Close()
-            this.FileObj := ""
+    ; 关闭后台下载进程
+    KillWorker() {
+        if (this.WorkerPid && ProcessExist(this.WorkerPid)) {
+            try ProcessClose(this.WorkerPid)
         }
+        this.WorkerPid := 0
     }
 
     ; 删除临时文件
@@ -382,30 +351,141 @@ class UpdateDownloadSession {
         }
     }
 
-    ; 锁定 SAFEARRAY 以读取二进制数据
-    LockSafeArray(data, &byteCount) {
-        byteCount := 0
-        safeArray := ComObjValue(data)
-        if (safeArray = 0)
-            return 0
-
-        lowerBound := 0
-        upperBound := -1
-        DllCall("oleaut32\SafeArrayGetLBound", "ptr", safeArray, "uint", 1, "int*", &lowerBound)
-        DllCall("oleaut32\SafeArrayGetUBound", "ptr", safeArray, "uint", 1, "int*", &upperBound)
-        byteCount := upperBound - lowerBound + 1
-        if (byteCount <= 0)
-            return 0
-
-        dataPtr := 0
-        DllCall("oleaut32\SafeArrayAccessData", "ptr", safeArray, "ptr*", &dataPtr)
-        return dataPtr
+    ; 清理状态文件和脚本文件
+    CleanupWorkerFiles() {
+        if FileExist(this.ProgressFile) {
+            try FileDelete(this.ProgressFile)
+        }
+        if FileExist(this.WorkerScript) {
+            try FileDelete(this.WorkerScript)
+        }
+        this.ProgressFile := ""
+        this.WorkerScript := ""
     }
 
-    ; 释放 SAFEARRAY
-    UnlockSafeArray(data) {
-        safeArray := ComObjValue(data)
-        if (safeArray != 0)
-            DllCall("oleaut32\SafeArrayUnaccessData", "ptr", safeArray)
+    ; 读取进度状态文件
+    ReadState() {
+        result := {
+            Status: "",
+            DownloadedBytes: this.DownloadedBytes,
+            TotalBytes: this.TotalBytes,
+            HasContentLength: this.HasContentLength,
+            ErrorMessage: ""
+        }
+
+        if !FileExist(this.ProgressFile)
+            return result
+
+        try content := FileRead(this.ProgressFile, "UTF-8")
+        catch
+            return result
+
+        status := this.ReadStateValue(content, "Status")
+        if (status != "")
+            result.Status := status
+
+        downloadedBytes := this.ReadStateValue(content, "DownloadedBytes")
+        if (downloadedBytes != "")
+            result.DownloadedBytes := downloadedBytes + 0
+
+        totalBytes := this.ReadStateValue(content, "TotalBytes")
+        if (totalBytes != "")
+            result.TotalBytes := totalBytes + 0
+
+        hasContentLength := this.ReadStateValue(content, "HasContentLength")
+        if (hasContentLength != "")
+            result.HasContentLength := hasContentLength = "1"
+
+        errorMessage := this.ReadStateValue(content, "Error")
+        if (errorMessage != "")
+            result.ErrorMessage := errorMessage
+
+        return result
+    }
+
+    ; 从状态文件中读取指定键值
+    ReadStateValue(content, key) {
+        pattern := "(?m)^" key "=(.*)$"
+        if RegExMatch(content, pattern, &match)
+            return match[1]
+        return ""
+    }
+
+    ; 生成 PowerShell 下载脚本
+    BuildWorkerScript() {
+        lines := []
+        lines.Push("param(")
+        lines.Push("    [string]`$Url,")
+        lines.Push("    [string]`$OutFile,")
+        lines.Push("    [string]`$StateFile")
+        lines.Push(")")
+        lines.Push("")
+        lines.Push("`$ErrorActionPreference = 'Stop'")
+        lines.Push("")
+        lines.Push("function Write-State {")
+        lines.Push("    param(")
+        lines.Push("        [string]`$Status,")
+        lines.Push("        [long]`$DownloadedBytes,")
+        lines.Push("        [long]`$TotalBytes,")
+        lines.Push("        [bool]`$HasContentLength,")
+        lines.Push("        [string]`$ErrorMessage = ''")
+        lines.Push("    )")
+        lines.Push("")
+        lines.Push("    `$lines = @(")
+        lines.Push("        'Status=`$Status',")
+        lines.Push("        'DownloadedBytes=`$DownloadedBytes',")
+        lines.Push("        'TotalBytes=`$TotalBytes',")
+        lines.Push("        'HasContentLength=`$([int]`$HasContentLength)',")
+        lines.Push("        'Error=`$ErrorMessage'")
+        lines.Push("    )")
+        lines.Push("")
+        lines.Push("    [System.IO.File]::WriteAllLines(`$StateFile, `$lines, [System.Text.Encoding]::UTF8)")
+        lines.Push("}")
+        lines.Push("")
+        lines.Push("`$response = `$null")
+        lines.Push("`$responseStream = `$null")
+        lines.Push("`$fileStream = `$null")
+        lines.Push("")
+        lines.Push("try {")
+        lines.Push("    Write-State -Status 'starting' -DownloadedBytes 0 -TotalBytes 0 -HasContentLength `$false")
+        lines.Push("")
+        lines.Push("    `$request = [System.Net.HttpWebRequest]::Create(`$Url)")
+        lines.Push("    `$response = `$request.GetResponse()")
+        lines.Push("    `$responseStream = `$response.GetResponseStream()")
+        lines.Push("")
+        lines.Push("    `$totalBytes = [long]`$response.ContentLength")
+        lines.Push("    `$hasContentLength = `$totalBytes -gt 0")
+        lines.Push("    `$downloadedBytes = 0L")
+        lines.Push("    `$buffer = New-Object byte[] 65536")
+        lines.Push("")
+        lines.Push("    `$fileStream = [System.IO.File]::Open(`$OutFile, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)")
+        lines.Push("    Write-State -Status 'downloading' -DownloadedBytes 0 -TotalBytes `$totalBytes -HasContentLength `$hasContentLength")
+        lines.Push("")
+        lines.Push("    while ((`$read = `$responseStream.Read(`$buffer, 0, `$buffer.Length)) -gt 0) {")
+        lines.Push("        `$fileStream.Write(`$buffer, 0, `$read)")
+        lines.Push("        `$downloadedBytes += `$read")
+        lines.Push("        Write-State -Status 'downloading' -DownloadedBytes `$downloadedBytes -TotalBytes `$totalBytes -HasContentLength `$hasContentLength")
+        lines.Push("    }")
+        lines.Push("")
+        lines.Push("    `$fileStream.Flush()")
+        lines.Push("    Write-State -Status 'completed' -DownloadedBytes `$downloadedBytes -TotalBytes `$totalBytes -HasContentLength `$hasContentLength")
+        lines.Push("    exit 0")
+        lines.Push("}")
+        lines.Push("catch {")
+        lines.Push("    `$msg = `$_.Exception.Message -replace '`r|`n', ' '")
+        lines.Push("    try {")
+        lines.Push("        if (Test-Path `$OutFile) {")
+        lines.Push("            Remove-Item `$OutFile -Force")
+        lines.Push("        }")
+        lines.Push("    } catch {}")
+        lines.Push("    Write-State -Status 'error' -DownloadedBytes 0 -TotalBytes 0 -HasContentLength `$false -ErrorMessage `$msg")
+        lines.Push("    exit 1")
+        lines.Push("}")
+        lines.Push("finally {")
+        lines.Push("    if (`$fileStream) { `$fileStream.Dispose() }")
+        lines.Push("    if (`$responseStream) { `$responseStream.Dispose() }")
+        lines.Push("    if (`$response) { `$response.Dispose() }")
+        lines.Push("}")
+        return lines.Join("`r`n")
     }
 }
