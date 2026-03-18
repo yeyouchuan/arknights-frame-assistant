@@ -14,6 +14,15 @@ class UpdateUI {
     ; 下载对话框实例
     static DownloadingDialog := ""
     static DownloadingCancelBtn := ""
+    ; 新增：下载进度相关控件引用
+    static DownloadingStatusText := ""
+    static DownloadingProgressBar := ""
+    static DownloadingPercentText := ""
+    static DownloadingSizeText := ""
+    static DownloadingManualBtn := ""
+    ; 新增：下载进度状态
+    static IsDownloadCancelling := false
+    static IsDownloadProgressIndeterminate := false
     
     ; 显示更新提示对话框（支持忽略此版本）
     ; params: 包含以下字段的对象
@@ -37,6 +46,7 @@ class UpdateUI {
         this.UpdateDialogParams := params
         
         ; 创建自定义GUI对话框
+        dialogW := 440
         title := "发现新版本"
         this.UpdateDialog := Gui(, title)
         this.UpdateDialog.Opt("+Owner")
@@ -52,14 +62,13 @@ class UpdateUI {
         } else {
             message := "检测到新版本可用！`n当前版本: " localVersion "`n最新版本: " remoteVersion "`n`n是否立即更新？"
         }
-        this.UpdateDialog.Add("Text", "x60 y20 w320", message)
+        this.UpdateDialog.Add("Text", "x30 y20 w380 h60 Center", message)
         
         ; 计算按钮位置
-        btnW := 100
+        btnW := 110
         btnH := 28
-        dialogW := 400
         startX := (dialogW - (btnW * 3 + 20)) // 2
-        btnY := 120
+        btnY := 105
         
         ; 添加三个按钮
         btnYes := this.UpdateDialog.Add("Button", "x" startX " y" btnY " w" btnW " h" btnH " Default", "是(&Y)")
@@ -72,7 +81,7 @@ class UpdateUI {
         btnIgnore.OnEvent("Click", (*) => this.OnUpdateIgnore())
         
         ; 显示对话框
-        this.UpdateDialog.Show("w" dialogW " h170 Center")
+        this.UpdateDialog.Show("w" dialogW " h155 Center")
     }
     
     ; 点击"是"按钮
@@ -130,6 +139,11 @@ class UpdateUI {
     static ShowDownloadingDialog(retryCount := 0) {
         ; 关闭已存在的下载对话框
         this.CloseDownloadingDialog()
+        this.IsDownloadCancelling := false
+        this.IsDownloadProgressIndeterminate := false
+        dialogW := 360
+        contentX := 20
+        contentW := dialogW - contentX * 2
         
         ; 创建非模态GUI窗口
         title := "下载中"
@@ -148,23 +162,54 @@ class UpdateUI {
         }
         
         ; 添加文本
-        this.DownloadingDialog.Add("Text", "x20 y20 w300 Center vDownloadText", message)
+        this.DownloadingStatusText := this.DownloadingDialog.Add("Text", "x" contentX " y16 w" contentW " Center vDownloadText", message)
+        ; 新增：进度条与进度文本
+        this.DownloadingProgressBar := this.DownloadingDialog.Add("Progress", "x" contentX " y52 w" contentW " h18 Range0-100", 0)
+        this.DownloadingPercentText := this.DownloadingDialog.Add("Text", "x" contentX " y78 w60 Right", "0% |")
+        this.DownloadingSizeText := this.DownloadingDialog.Add("Text", "x88 y78 w252", "0 B / --")
 
         ; 添加手动下载渠道
-        manualBtnW := 80
+        manualBtnW := 90
         manualBtnH := 26
-        padding := 70
-        manualBtnY := 60
+        padding := 50
+        manualBtnY := 108
         ; 手动下载按钮 - 左下角
-        manualBtn := this.DownloadingDialog.Add("Button", "x" padding " y" manualBtnY " w" manualBtnW " h" manualBtnH, "手动下载(&M)")
-        manualBtn.OnEvent("Click", (*) => EventBus.Publish("OnManualDownload"))
+        this.DownloadingManualBtn := this.DownloadingDialog.Add("Button", "x" padding " y" manualBtnY " w" manualBtnW " h" manualBtnH, "手动下载(&M)")
+        this.DownloadingManualBtn.OnEvent("Click", (*) => EventBus.Publish("OnManualDownload"))
         ; 取消下载按钮 - 右下角
-        cancelBtnX := 340 - padding - manualBtnW
+        cancelBtnX := dialogW - padding - manualBtnW
         this.DownloadingCancelBtn := this.DownloadingDialog.Add("Button", "x" cancelBtnX " y" manualBtnY " w" manualBtnW " h" manualBtnH, "取消下载(&C)")
         this.DownloadingCancelBtn.OnEvent("Click", (*) => this.OnDownloadCancel())
 
         ; 显示对话框（非模态，不阻塞）
-        this.DownloadingDialog.Show("w340 h110 Center")
+        this.DownloadingDialog.Show("w" dialogW " h150 Center")
+    }
+
+    ; 新增：更新下载进度显示
+    static UpdateDownloadProgress(progressInfo) {
+        if (this.DownloadingDialog = "" || this.IsDownloadCancelling)
+            return
+
+        downloadedBytes := progressInfo.HasProp("downloadedBytes") ? progressInfo.downloadedBytes : 0
+        totalBytes := progressInfo.HasProp("totalBytes") ? progressInfo.totalBytes : 0
+        percent := progressInfo.HasProp("percent") ? progressInfo.percent : 0
+        isIndeterminate := progressInfo.HasProp("isIndeterminate") ? progressInfo.isIndeterminate : true
+        downloadedBytes := IsNumber(downloadedBytes) ? downloadedBytes + 0 : 0
+        totalBytes := IsNumber(totalBytes) ? totalBytes + 0 : 0
+        percent := IsNumber(percent) ? percent + 0 : 0
+
+        if (isIndeterminate) {
+            this.SetDownloadProgressIndeterminate(true)
+            this.DownloadingPercentText.Value := "-- |"
+            this.DownloadingSizeText.Value := "已下载 " this.FormatBytes(downloadedBytes)
+            return
+        }
+
+        this.SetDownloadProgressIndeterminate(false)
+        percent := Max(0, Min(percent, 100))
+        this.DownloadingProgressBar.Value := percent
+        this.DownloadingPercentText.Value := percent "% |"
+        this.DownloadingSizeText.Value := this.FormatBytes(downloadedBytes) " / " this.FormatBytes(totalBytes)
     }
     
     ; 手动下载按钮点击事件
@@ -179,8 +224,11 @@ class UpdateUI {
     static OnDownloadCancel() {
         ; 更新UI显示取消状态
         if (this.DownloadingDialog != "") {
+            this.IsDownloadCancelling := true
             try {
                 ; 禁用取消按钮，防止重复点击
+                if (this.DownloadingManualBtn != "")
+                    this.DownloadingManualBtn.Opt("+Disabled")
                 this.DownloadingCancelBtn.Opt("+Disabled")
                 ; 更新文本为取消中
                 this.DownloadingDialog["DownloadText"].Value := "正在取消下载..."
@@ -196,7 +244,14 @@ class UpdateUI {
             try this.DownloadingDialog.Destroy()
             this.DownloadingDialog := ""
             this.DownloadingCancelBtn := ""
+            this.DownloadingStatusText := ""
+            this.DownloadingProgressBar := ""
+            this.DownloadingPercentText := ""
+            this.DownloadingSizeText := ""
+            this.DownloadingManualBtn := ""
         }
+        this.IsDownloadCancelling := false
+        this.IsDownloadProgressIndeterminate := false
     }
     
     ; 显示下载完成的提示
@@ -220,6 +275,48 @@ class UpdateUI {
     ; 显示自动更新已禁用的提示
     static ShowAutoUpdateDisabledDialog() {
         MessageBox.Info("自动检查更新已禁用。`n如需开启，请在配置文件中设置 AutoUpdate=1", "提示")
+    }
+
+    ; 新增：设置进度条为确定/不确定模式
+    static SetDownloadProgressIndeterminate(isIndeterminate) {
+        if (this.DownloadingProgressBar = "")
+            return
+
+        if (this.IsDownloadProgressIndeterminate = isIndeterminate)
+            return
+
+        hwnd := this.DownloadingProgressBar.Hwnd
+        style := DllCall("GetWindowLongPtr", "ptr", hwnd, "int", -16, "ptr")
+        if (isIndeterminate) {
+            style := style | 0x08
+            DllCall("SetWindowLongPtr", "ptr", hwnd, "int", -16, "ptr", style, "ptr")
+            DllCall("SetWindowPos", "ptr", hwnd, "ptr", 0, "int", 0, "int", 0, "int", 0, "int", 0, "uint", 0x27)
+            DllCall("SendMessage", "ptr", hwnd, "uint", 0x040A, "ptr", 1, "ptr", 30)
+        } else {
+            DllCall("SendMessage", "ptr", hwnd, "uint", 0x040A, "ptr", 0, "ptr", 0)
+            style := style & ~0x08
+            DllCall("SetWindowLongPtr", "ptr", hwnd, "int", -16, "ptr", style, "ptr")
+            DllCall("SetWindowPos", "ptr", hwnd, "ptr", 0, "int", 0, "int", 0, "int", 0, "int", 0, "uint", 0x27)
+            this.DownloadingProgressBar.Value := 0
+        }
+
+        this.IsDownloadProgressIndeterminate := isIndeterminate
+    }
+
+    ; 新增：格式化下载大小文本
+    static FormatBytes(bytes) {
+        units := ["B", "KB", "MB", "GB"]
+        size := bytes + 0.0
+        unitIndex := 1
+
+        while (size >= 1024 && unitIndex < units.Length) {
+            size := size / 1024
+            unitIndex += 1
+        }
+
+        if (unitIndex = 1)
+            return Floor(size) " " units[unitIndex]
+        return Format("{:.1f}", size) " " units[unitIndex]
     }
 }
 
