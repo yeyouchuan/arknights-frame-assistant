@@ -141,6 +141,9 @@ class UpdateUI {
         this.CloseDownloadingDialog()
         this.IsDownloadCancelling := false
         this.IsDownloadProgressIndeterminate := false
+        dialogW := 360
+        contentX := 20
+        contentW := dialogW - contentX * 2
         
         ; 创建非模态GUI窗口
         title := "下载中"
@@ -159,10 +162,10 @@ class UpdateUI {
         }
         
         ; 添加文本
-        this.DownloadingStatusText := this.DownloadingDialog.Add("Text", "x20 y16 w320 Center vDownloadText", message)
+        this.DownloadingStatusText := this.DownloadingDialog.Add("Text", "x" contentX " y16 w" contentW " Center vDownloadText", message)
         ; 新增：进度条与进度文本
-        this.DownloadingProgressBar := this.DownloadingDialog.Add("Progress", "x20 y52 w320 h18 Range0-100", 0)
-        this.DownloadingPercentText := this.DownloadingDialog.Add("Text", "x20 y78 w60 Right", "0% |")
+        this.DownloadingProgressBar := this.DownloadingDialog.Add("Progress", "x" contentX " y52 w" contentW " h18 Range0-100", 0)
+        this.DownloadingPercentText := this.DownloadingDialog.Add("Text", "x" contentX " y78 w60 Right", "0% |")
         this.DownloadingSizeText := this.DownloadingDialog.Add("Text", "x88 y78 w252", "0 B / --")
 
         ; 添加手动下载渠道
@@ -174,12 +177,12 @@ class UpdateUI {
         this.DownloadingManualBtn := this.DownloadingDialog.Add("Button", "x" padding " y" manualBtnY " w" manualBtnW " h" manualBtnH, "手动下载(&M)")
         this.DownloadingManualBtn.OnEvent("Click", (*) => EventBus.Publish("OnManualDownload"))
         ; 取消下载按钮 - 右下角
-        cancelBtnX := 340 - padding - manualBtnW
+        cancelBtnX := dialogW - padding - manualBtnW
         this.DownloadingCancelBtn := this.DownloadingDialog.Add("Button", "x" cancelBtnX " y" manualBtnY " w" manualBtnW " h" manualBtnH, "取消下载(&C)")
         this.DownloadingCancelBtn.OnEvent("Click", (*) => this.OnDownloadCancel())
 
         ; 显示对话框（非模态，不阻塞）
-        this.DownloadingDialog.Show("w340 h150 Center")
+        this.DownloadingDialog.Show("w" dialogW " h150 Center")
     }
 
     ; 新增：更新下载进度显示

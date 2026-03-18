@@ -411,6 +411,18 @@ class UpdateDownloadSession {
         return ""
     }
 
+    ; 新增：兼容旧环境的数组拼接
+    JoinLines(lines, delimiter := "`r`n") {
+        result := ""
+        for index, line in lines {
+            if (index = 1)
+                result := line
+            else
+                result .= delimiter line
+        }
+        return result
+    }
+
     ; 生成 PowerShell 下载脚本
     BuildWorkerScript() {
         lines := []
@@ -486,6 +498,6 @@ class UpdateDownloadSession {
         lines.Push("    if (`$responseStream) { `$responseStream.Dispose() }")
         lines.Push("    if (`$response) { `$response.Dispose() }")
         lines.Push("}")
-        return lines.Join("`r`n")
+        return this.JoinLines(lines, "`r`n")
     }
 }
