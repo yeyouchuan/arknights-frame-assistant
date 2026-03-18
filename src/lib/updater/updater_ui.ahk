@@ -46,6 +46,7 @@ class UpdateUI {
         this.UpdateDialogParams := params
         
         ; 创建自定义GUI对话框
+        dialogW := 440
         title := "发现新版本"
         this.UpdateDialog := Gui(, title)
         this.UpdateDialog.Opt("+Owner")
@@ -61,14 +62,13 @@ class UpdateUI {
         } else {
             message := "检测到新版本可用！`n当前版本: " localVersion "`n最新版本: " remoteVersion "`n`n是否立即更新？"
         }
-        this.UpdateDialog.Add("Text", "x60 y20 w320", message)
+        this.UpdateDialog.Add("Text", "x30 y20 w380 h60 Center", message)
         
         ; 计算按钮位置
-        btnW := 100
+        btnW := 110
         btnH := 28
-        dialogW := 400
         startX := (dialogW - (btnW * 3 + 20)) // 2
-        btnY := 120
+        btnY := 105
         
         ; 添加三个按钮
         btnYes := this.UpdateDialog.Add("Button", "x" startX " y" btnY " w" btnW " h" btnH " Default", "是(&Y)")
@@ -81,7 +81,7 @@ class UpdateUI {
         btnIgnore.OnEvent("Click", (*) => this.OnUpdateIgnore())
         
         ; 显示对话框
-        this.UpdateDialog.Show("w" dialogW " h170 Center")
+        this.UpdateDialog.Show("w" dialogW " h155 Center")
     }
     
     ; 点击"是"按钮
@@ -194,6 +194,9 @@ class UpdateUI {
         totalBytes := progressInfo.HasProp("totalBytes") ? progressInfo.totalBytes : 0
         percent := progressInfo.HasProp("percent") ? progressInfo.percent : 0
         isIndeterminate := progressInfo.HasProp("isIndeterminate") ? progressInfo.isIndeterminate : true
+        downloadedBytes := IsNumber(downloadedBytes) ? downloadedBytes + 0 : 0
+        totalBytes := IsNumber(totalBytes) ? totalBytes + 0 : 0
+        percent := IsNumber(percent) ? percent + 0 : 0
 
         if (isIndeterminate) {
             this.SetDownloadProgressIndeterminate(true)

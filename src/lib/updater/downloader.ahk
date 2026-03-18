@@ -386,11 +386,11 @@ class UpdateDownloadSession {
 
         downloadedBytes := this.ReadStateValue(content, "DownloadedBytes")
         if (downloadedBytes != "")
-            result.DownloadedBytes := downloadedBytes + 0
+            result.DownloadedBytes := this.ParseNumber(downloadedBytes, result.DownloadedBytes)
 
         totalBytes := this.ReadStateValue(content, "TotalBytes")
         if (totalBytes != "")
-            result.TotalBytes := totalBytes + 0
+            result.TotalBytes := this.ParseNumber(totalBytes, result.TotalBytes)
 
         hasContentLength := this.ReadStateValue(content, "HasContentLength")
         if (hasContentLength != "")
@@ -409,6 +409,16 @@ class UpdateDownloadSession {
         if RegExMatch(content, pattern, &match)
             return match[1]
         return ""
+    }
+
+    ; 新增：安全解析数字，避免半写入状态文件导致类型错误
+    ParseNumber(value, fallback := 0) {
+        value := Trim(value)
+        if (value = "")
+            return fallback
+        if RegExMatch(value, "^-?\d+$")
+            return value + 0
+        return fallback
     }
 
     ; 新增：兼容旧环境的数组拼接
