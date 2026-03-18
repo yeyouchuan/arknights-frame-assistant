@@ -121,6 +121,8 @@ class Updater {
             downloadUrl: params.downloadUrl,
             localVersion: params.localVersion,
             remoteVersion: params.remoteVersion,
+            ; 新增：下载进度回调，用于更新进度条
+            onProgress: (progressInfo) => UpdateUI.UpdateDownloadProgress(progressInfo),
             onComplete: (result) => this.HandleDownloadSuccess(result),
             onError: (error) => this.HandleDownloadFailure(error, params, retryCount),
             onCancel: (info) => this.HandleDownloadCancelComplete()

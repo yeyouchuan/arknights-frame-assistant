@@ -2,7 +2,7 @@
 
 class VersionChecker {
     ; GitHub API地址
-    static ApiUrl := "https://api.github.com/repos/CloudTracey/arknights-frame-assistant/releases"
+    static ApiUrl := "https://api.github.com/repos/yeyouchuan/arknights-frame-assistant/releases"
     
     ; Token验证API地址
     static TokenValidateUrl := "https://api.github.com/user"
