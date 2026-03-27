@@ -123,7 +123,7 @@ class GuiManager {
         this.KeybindControls.Push(AddBindRow("按下暂停", "PressPause")*)
         this.KeybindControls.Push(AddBindRow("松开暂停", "ReleasePause")*)
         this.KeybindControls.Push(AddBindRow("切换倍速", "GameSpeed")*)
-        this.KeybindControls.Push(AddBindRow("暂停选中", "PauseSelect")*)
+        this.KeybindControls.Push(AddBindRow("暂停时选中", "PauseSelect")*)
         this.KeybindControls.Push(AddBindRow("单位技能", "Skill")*)
         this.KeybindControls.Push(AddBindRow("单位撤退", "Retreat")*)
         
@@ -156,7 +156,7 @@ class GuiManager {
 
         ; 游戏内帧率设置
         txtFrame := this.MainGui.Add("Text", "x45 y+20 w90 Right", "游戏内帧率")
-        this.GuiFrame := this.MainGui.Add("DropDownList", "x+20 y+-18 w120 vFrame AltSubmit", ["30", "60", "120"])
+        this.GuiFrame := this.MainGui.Add("DropDownList", "x+20 y+-18 w120 vFrame AltSubmit", ["30", "60", "90", "120", "144", "165", "240"])
         this.GuiFrame.OnEvent("Change", (*) => this.SetIsModifiedTrue())
         this.MainGui["Frame"].Value := Config.GetImportant("Frame")
         this.NotOtherControls.Push(txtFrame)
@@ -164,9 +164,9 @@ class GuiManager {
 
         ; 帧数设置提示语
         this.MainGui.SetFont("s9 c1994d2")
-        hintFrame1 := this.MainGui.Add("Text", "x0 y+15 w" this.GuiWidth " Center", "请确保上方“游戏内帧率”设置与游戏内保持一致，若屏幕刷新率低于120，请关闭游戏内的“垂直同步”")
+        hintFrame1 := this.MainGui.Add("Text", "x0 y+15 w" this.GuiWidth " Center", "若开启了游戏内的“垂直同步”，请确保上方“游戏内帧率”设置与你的屏幕刷新率保持一致")
         this.NotOtherControls.Push(hintFrame1)
-        hintFrame2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "或确保“游戏内帧率”设置与显示器刷新率一致再开启“垂直同步”")
+        hintFrame2 := this.MainGui.Add("Text", "x0 y+8 w" this.GuiWidth " Center", "若关闭了游戏的“垂直同步”，请确保上方“游戏内帧率”设置与游戏内保持一致")
         this.MainGui.SetFont("s9 cDefault")
         this.NotOtherControls.Push(hintFrame2)
 
