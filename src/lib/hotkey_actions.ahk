@@ -75,8 +75,8 @@ ActionPauseSelect(ThisHotkey) {
     }
     Send "{Space Down}"
     USleep(State.CurrentDelay)
-    Send "{RButton Down}"
-    Send "{RButton Up}"
+    Send "{LButton Down}"
+    Send "{LButton Up}"
     Send "{ESC Down}"
     USleep(50)
     Send "{Space Up}"
@@ -113,8 +113,8 @@ ActionOneClickSkill(ThisHotkey) {
         try DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
         return
     }
-    Send "{RButton Down}"
-    Send "{RButton Up}"
+    Send "{LButton Down}"
+    Send "{LButton Up}"
     USleep(State.ClickDelay)
     Send "{e Down}"
     USleep(50)
@@ -133,8 +133,8 @@ ActionOneClickRetreat(ThisHotkey) {
         try DllCall("SetThreadDpiAwarenessContext", "ptr", oldCtx, "ptr")
         return
     }
-    Send "{RButton Down}"
-    Send "{RButton Up}"
+    Send "{LButton Down}"
+    Send "{LButton Up}"
     USleep(State.ClickDelay)
     Send "{q Down}"
     USleep(50)
@@ -155,8 +155,8 @@ ActionPauseSkill(ThisHotkey) {
     }
     Send "{Space Down}"
     USleep(State.CurrentDelay)
-    Send "{RButton Down}"
-    Send "{RButton Up}"
+    Send "{LButton Down}"
+    Send "{LButton Up}"
     Send "{ESC Down}"
     USleep(State.ClickDelay)
     Send "{e Down}"
@@ -180,8 +180,8 @@ ActionPauseRetreat(ThisHotkey) {
     }
     Send "{Space Down}"
     USleep(State.CurrentDelay)
-    Send "{RButton Down}"
-    Send "{RButton Up}"
+    Send "{LButton Down}"
+    Send "{LButton Up}"
     Send "{ESC Down}"
     USleep(State.ClickDelay)
     Send "{q Down}"
